@@ -8,13 +8,13 @@ export default function Home() {
 
     const [users,setUsers] = useState([]);
     
-    useEffect( () =>{
+    /*useEffect( () =>{
         fetchUsers().then((data)=>{
             setUsers(data);
         }).catch((err)=>{
             console.error("Error fetching users: ", err)
         })
-    },[]);
+    },[]);*/
     
     return(
         <View style={styles.container}>

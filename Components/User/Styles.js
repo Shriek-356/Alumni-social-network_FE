@@ -8,20 +8,26 @@ export default StyleSheet.create({
         alignSelf:'center'
     },
     header:{
-        marginTop:80
+        marginTop:60
     },   
 
     titleText:{
         fontWeight:"bold",
         fontSize:35,
         textAlign:'center',
-        marginTop:30,
+        marginTop:25,
         color:'#0033CC'
     },
 
+    subTitleText:{
+        marginTop:10,
+        fontSize:15,
+        textAlign:'center'
+        
+    },
+
     form:{
-        marginTop:50,
-        flex:1,
+        marginTop:40,
         marginBottom:50
     },
 
