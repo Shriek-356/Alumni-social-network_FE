@@ -10,6 +10,7 @@ const endpoints = {
     'getCurrentUser':'/users/current_user/',
     'getAccountUser': (id) => `/users/${id}/account/`,
     'getAlumniAccount': (id) => `/alumni_accounts/${id}/`,
+    'getUserPosts': (id) => `/accounts/${id}/post/`,
 }
 
 export const fetchUsers = async () =>{
@@ -87,6 +88,16 @@ export const getAccountUser = async(token,id) => {
 export const getAlumniAccountt = async (token,id) => {
     try{
         let response = await axiosDAuthApiInstance(token).get(endpoints.getAlumniAccount(id))
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const getUserPostss = async(token,id) => {
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.getUserPosts(id))
         return response.data
     }catch(ex){
         console.log(ex)
