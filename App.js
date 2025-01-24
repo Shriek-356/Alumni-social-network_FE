@@ -7,6 +7,7 @@ import Register from './Components/User/Register';
 import RegisterDetails from './Components/User/RegisterDetails';
 import { createContext, use } from 'react';
 import { useState } from 'react';
+import { useReducer } from 'react';
 
 const Stack = createStackNavigator();
 
@@ -14,7 +15,7 @@ export const RegisterInfoContext = createContext()
 export const CurrentUserContext = createContext()
 export const CurrentAccountUserContext = createContext()
 export const CurrentAlumniAccountContext = createContext()
-
+export const MyUserContext = createContext();
 export default function App() {
 
   const [RegisterInfo, setRegisterInfo] = useState({
@@ -32,8 +33,11 @@ export default function App() {
   const [currentAlumniAccount, setCurrentAlumniAccount] = useState({})
   const [currentUser, setCurrentUser] = useState({})
   const [currentAccountUser, setCurrentAccountUser] = useState({})
+  // const [user, dispatch] = useReducer(MyUserReducer, AsyncStorage.getItem("user") || null)
+  
 
   return (
+    
     <CurrentAlumniAccountContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
       <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
         <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
@@ -58,6 +62,7 @@ export default function App() {
         </CurrentUserContext.Provider>
       </CurrentAccountUserContext.Provider>
     </CurrentAlumniAccountContext.Provider>
+    
   );
 }
 
