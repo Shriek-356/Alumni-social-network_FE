@@ -9,7 +9,8 @@ import { getToken } from "../../configs/api";
 import { useContext } from "react";
 import { CurrentAccountUserContext, CurrentAlumniAccountContext, CurrentUserContext } from "../../App";
 import RenderPost from "../Post/Post";
-import { getAllPostss } from "../../configs/API/PostApi";
+import { getAllPostss, getTotalReactionsAccountt } from "../../configs/API/PostApi";
+import { TotalReactionAccountContext } from "../../App";
 export default function Home() {
 
     const [posts, setPosts] = useState([])
@@ -18,6 +19,7 @@ export default function Home() {
     const [currentUser, setCurrentUser] = useContext(CurrentUserContext)
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [currentAlumniAccount, setCurrentAlumniAccount] = useContext(CurrentAlumniAccountContext)
+    const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
 
     useEffect(() => {
         const fetchToken = async () => {
@@ -53,7 +55,18 @@ export default function Home() {
         fetchPosts()
     }, [token]);//chay lai khi token thay doi, tuc la khi token duoc cap nhat
 
-
+    useEffect(() => {
+        const fetchReactionsAccount = async () => {
+            try {
+                let response = await getTotalReactionsAccountt(token, currentUser.id)
+                setTotalReactionAccountt(response)
+            }
+            catch (error) {
+                console.log("Error get all reactions account: ", error)
+            }
+        }
+        fetchReactionsAccount()
+    }, [currentUser, token])
     return (
         <View style={Styles.container}>
             {loading ? (

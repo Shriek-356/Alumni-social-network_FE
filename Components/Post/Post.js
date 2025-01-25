@@ -1,17 +1,52 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getPostCommentss } from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
+import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
+import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
+
+
 import axios from 'axios';
+import react from 'react';
 
 function RenderPost({ item }) {
     const [reaction, setReaction] = useState();
+    const [reactionID, setReactionID] = useState();
     const [comments, setComments] = useState([]);
-    const [newComment, setNewComment] = useState('');
     const [nextPage, setNextPage] = useState(null);
-
+    const [totalReaction, setTotalReaction] = useState();
     const [token, setToken] = useState();
+    const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
+    const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
+
+    const [newComment, setNewComment] = useState({
+        id: '',
+        account: currentAccountUser,
+        comment_image_url: '',
+        created_date: '',
+        updated_date: '',
+        active: '',
+        comment_content: '',
+        post: item.id
+    })
+
+    //Lay so cam xuc cua 1 bai viet
+    useEffect(() => {
+        const fetchReactions = async () => {
+            try {
+                let response = await getTotalReactionss(token, item.id)
+                if (response) {
+                    console.log("Reactions: ", response.total_reactions)
+                    setTotalReaction(response.total_reactions)
+                }
+            }
+            catch (error) {
+                console.log("Error get Reactions: ", error)
+            }
+        }
+        fetchReactions()
+    }, [token])
 
     function processImageURL(url) {
         //Sau nay neu co anh mac dinh thi thay bang anh mac dinh neu bi loi
@@ -44,7 +79,6 @@ function RenderPost({ item }) {
         fetchToken();
     }, []);
 
-
     useEffect(() => {
         const fetchComments = async () => {
             if (item && token) {
@@ -53,28 +87,105 @@ function RenderPost({ item }) {
                     await setComments(dataComments.results || [])
                     console.log(dataComments)
                     setNextPage(dataComments.next)
-                    console.log(dataComments.next)
                 } catch (error) {
                     console.log("Fetch comments error: ", error)
                 }
             }
         }
         fetchComments()
-
-        console.log('id:', item.id)
-
     }, [item, token])
 
-    const handleReaction = (reactionType) => {
-        setReaction(reactionType);
-    };
+    const test = async(reactionType)=>{
+        await handleReaction(reactionType)
+    }
 
-    const addComment = () => {
-        if (newComment.trim()) {
-            setComments([...comments, newComment]);
-            setNewComment('');
+    //Ham xu ly khi nguoi dung tha cam xuc
+    const handleReaction = async (reactionType) => {
+        if (reaction && reaction === reactionType) {
+            console.log(reactionID)//Neu dang co cam xuc va giong cai cu thi xoa
+            try {
+                let response = await deleteReactionss(token, reactionID)
+                console.log("Delete reactions: ", response)
+                console.log(reactionID)
+                setReaction('')
+                setTotalReaction((prev) => prev - 1);
+            } catch (error) {
+                console.log("Error delete reactions: ", error)
+            }
+        }
+        else if (reaction && reaction != reactionType) {
+            // neu dang co cam xuc va khac cai cu thi cap nhat cai moi
+            try {
+                const dataReactions = {
+                    reaction: reactionType
+                }
+                let response = await updateReactionss(token, reactionID, dataReactions)
+                console.log("Update reactions: ", response)
+                console.log(reactionID)
+                setReaction(reactionType)
+            } catch (error) {
+                console.log("Error update reactions: ", error)
+            }
+        }
+        else {// neu khong co cam xuc
+            try {
+                const dataReactions = {
+                    reaction: reactionType,
+                    account: currentAccountUser.user,
+                    post: item.id
+                }
+                console.log(dataReactions)
+                let response = await addReactionss(token, dataReactions)
+                console.log("Add reactions: ", response)
+                setReaction(reactionType)
+                setReactionID(response.id)//Cap nhat id reaction vi neu them cam xuc moi thi id se thay doi, khong dung id truoc do duoc
+                setTotalReaction((prev) => prev + 1);
+            } catch (error) {
+                console.log("Error add reactions: ", error)
+            }
         }
     };
+
+    const addComment = async () => {
+
+        try {
+
+            if (newComment.comment_content.trim()) {
+
+                const commentsJson = {
+                    comment_content: newComment.comment_content,
+                    account: currentAccountUser.user,
+                    post: item.id,
+                    comment_image_url: ""
+                }
+                console.log(commentsJson)
+                let respone = await addPostCommentss(token, commentsJson)
+
+                if (respone) {
+                    console.log(respone)
+                    const updateComments = {
+                        ...newComment,
+                        created_date: new Date().toISOString().split('T')[0]
+                    }
+                    setComments([...comments, updateComments])
+                    setNewComment({ ...newComment, comment_content: '' })
+                }
+            }
+        } catch (error) {
+            console.log("Error add comments: ", error)
+        }
+    };
+
+    useEffect(() => {
+        if (totalReactionAccountt) {
+            totalReactionAccountt.forEach(posts => {
+                if (posts && posts.post.id === item.id) {
+                    setReaction(posts.reaction);
+                    setReactionID(posts.id);
+                }
+            });
+        }
+    }, [totalReactionAccountt])
 
     return (
         <View style={styles.postContainer}>
@@ -103,19 +214,20 @@ function RenderPost({ item }) {
 
 
             <View style={styles.footer}>
+                <Text>{totalReaction}</Text>
                 <TouchableOpacity style={styles.actionButton}
-                    onPress={() => handleReaction('like')}>
-                    <FontAwesome name="thumbs-up" size={20} color={reaction === 'like' ? 'blue' : 'gray'} />
+                    onPress={() => test('Like')}>
+                    <FontAwesome name="thumbs-up" size={20} color={reaction === 'Like' ? 'blue' : 'gray'} />
                     <Text style={styles.actionText}>Like</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}
-                    onPress={() => handleReaction('haha')}>
-                    <FontAwesome name="smile-o" size={20} color={reaction === 'haha' ? 'yellow' : 'gray'} />
+                    onPress={() => test('Haha')}>
+                    <FontAwesome name="smile-o" size={20} color={reaction === 'Haha' ? 'orange' : 'gray'} />
                     <Text style={styles.actionText}>Haha</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton}
-                    onPress={() => handleReaction('love')}>
-                    <FontAwesome name="heart" size={20} color={reaction === 'love' ? 'red' : 'gray'} />
+                    onPress={() => test('Tym')}>
+                    <FontAwesome name="heart" size={20} color={reaction === 'Tym' ? 'red' : 'gray'} />
                     <Text style={styles.actionText}>Tim</Text>
                 </TouchableOpacity>
             </View>
@@ -155,19 +267,18 @@ function RenderPost({ item }) {
 
 
                 {/*Thêm bình luận*/}
-                {nextPage && (
-                    <View style={styles.commentInputContainer}>
-                        <TextInput
-                            style={styles.commentInput}
-                            placeholder="Nhập bình luận..."
-                            value={newComment}
-                            onChangeText={setNewComment}
-                        />
-                        <TouchableOpacity style={styles.commentButton} onPress={addComment}>
-                            <Text style={styles.commentButtonText}>Gửi</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+
+                <View style={styles.commentInputContainer}>
+                    <TextInput
+                        style={styles.commentInput}
+                        placeholder="Nhập bình luận..."
+                        value={newComment.comment_content}
+                        onChangeText={comment_content => setNewComment({ ...newComment, comment_content })}
+                    />
+                    <TouchableOpacity style={styles.commentButton} onPress={addComment}>
+                        <Text style={styles.commentButtonText}>Gửi</Text>
+                    </TouchableOpacity>
+                </View>
 
             </View>
         </View>

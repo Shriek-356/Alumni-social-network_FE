@@ -12,6 +12,7 @@ import { CurrentAccountUserContext } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { CurrentAlumniAccountContext } from "../../App";
 import { getAlumniAccountt } from "../../configs/API/userApi";
+import { useEffect } from "react";
 
 function Login({ navigation: any }) {
     const navigation = useNavigation()
@@ -57,7 +58,6 @@ function Login({ navigation: any }) {
             const getAccount = await getAccountUser(token, id);
             if (getAccount) {
                 setCurrentAccountUser(getAccount)
-                console.log('account_user_id: ', getAccount.role)
                 return getAccount
             }
         }
@@ -73,7 +73,6 @@ function Login({ navigation: any }) {
 
             if (getAlumni) {
                 setCurrentAlumniAccount(getAlumni)
-                console.log(getAlumni)
                 return getAlumni
             }
 
@@ -99,7 +98,6 @@ function Login({ navigation: any }) {
 
                 //Lay currentUser
                 const id = await getCurrentUserInfo(response.access_token, id);
-
                 //Lay account
                 const account = await getAccountUserInfo(response.access_token, id);
 
