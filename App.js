@@ -8,6 +8,7 @@ import RegisterDetails from './Components/User/RegisterDetails';
 import { createContext } from 'react';
 import { useState } from 'react';
 import { useReducer } from 'react';
+import RoomScreen from './Components/ChatScreen/RoomScreen';
 
 const Stack = createStackNavigator();
 
@@ -57,6 +58,8 @@ export default function App() {
                   <Stack.Screen name="AllView" component={AllView}
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen name ="RoomScreen" component={RoomScreen}
+                  options={{headerShown:false}}/>
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>
