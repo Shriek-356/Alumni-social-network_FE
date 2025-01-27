@@ -5,10 +5,10 @@ const baseURL = 'https://socialapp130124.pythonanywhere.com/'
 //có gán baseURL ở hàm dưới rồi -> có viết api của chat trong này luôn
 const endpoints = {
 
-    "get-message-by-room": (id) => `/rooms/${id}/messages/`,  
+      
     'getCurrentUser':'/users/current_user/',
     'getAccountUser': (id) => `/users/${id}/account/`,
-    "send-message": '/messages/',
+    
    
 }
 

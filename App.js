@@ -8,8 +8,7 @@ import RegisterDetails from './Components/User/RegisterDetails';
 import { createContext } from 'react';
 import { useState } from 'react';
 import { useReducer } from 'react';
-import RoomScreen from './Components/ChatScreen/RoomScreen';
-import ChatScreen from './Components/ChatScreen/ChatScreen';
+import Profile from './Components/Home/Profile';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +16,7 @@ export const RegisterInfoContext = createContext()
 export const CurrentUserContext = createContext()
 export const CurrentAccountUserContext = createContext()
 export const CurrentAlumniAccountContext = createContext()
+export const MyUserContext = createContext();
 export const TotalReactionAccountContext = createContext()
 export default function App() {
 
@@ -58,10 +58,9 @@ export default function App() {
                   <Stack.Screen name="AllView" component={AllView}
                     options={{ headerShown: false }}
                   />
-                  {/* <Stack.Screen name ="RoomScreen" component={RoomScreen}
-                  options={{headerShown:false}}/> */}
-                  <Stack.Screen name ="ChatScreen" component={ChatScreen}
-                  options={{headerShown:false}}/>
+                  <Stack.Screen name="Profile" component={Profile}
+                    options={{ headerShown: false }}
+                  />
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>
@@ -71,5 +70,3 @@ export default function App() {
     </CurrentAlumniAccountContext.Provider>
   );
 }
-
-

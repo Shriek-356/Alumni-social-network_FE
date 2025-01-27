@@ -8,7 +8,8 @@ const endpoints = {
     'getTotalReactionsAccount': (id) => `/post_reaction/${id}/reaction_by_account/`,
     'deleteReactions': (id) => `/post_reaction/${id}/`,
     'updateReactions': (id) => `/post_reaction/${id}/`,
-    'addReactions': "/post_reaction/" 
+    'addReactions': "/post_reaction/",
+    'deletePost': (id) => `/post/${id}/`
 }
 
 export const getAllPostss = async(token) => {
@@ -79,7 +80,7 @@ export const addReactionss = async(token,dataReactions)=>{
 
 export const updateReactionss = async(token,id,dataReactions)=>{
     try{
-        let response = await axiosDAuthApiInstance(token).patch(endpoints.updateReactions(id))
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.updateReactions(id),dataReactions)
         return response.data
     }
     catch(ex){
@@ -91,6 +92,17 @@ export const updateReactionss = async(token,id,dataReactions)=>{
 export const deleteReactionss = async(token,id)=>{
     try{
         let response = await axiosDAuthApiInstance(token).delete(endpoints.deleteReactions(id))
+        return response.data
+    }
+    catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const deletePosts = async(token,id)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).delete(endpoints.deletePost(id))
         return response.data
     }
     catch(ex){

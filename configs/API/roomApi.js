@@ -1,29 +1,17 @@
-import { axiosDAuthApiInstance } from "../api"
-
+import { axiosDAuthApiInstance } from "../api";
 
 const endpoints = {
-    'getRoombyAccount': (id) => `/room/${id}/filter_rooms/`,
-    'createMultipleRooms': "/room/create_multiple_rooms/",
+    'getRoomByAccount':(id) => `/room/${id}/filter_rooms/`,
+
 }
-
-export const getRoombyAccount = async(id,token) => { //lay id cua nguoi dung hien tai
-    try{
-        const response = await axiosDAuthApiInstance(token).get(endpoints.getRoombyAccount(id))
-        return response.data; 
-
-    }catch(ex){
-        console.error(ex);
-        throw ex;
-    }
-};
-export const createMultipleRooms = async(firstUserId, token) => {
+// Lấy danh sách room chat theo ID
+export const getRoomByAccount = async (token, id) => {
     try {
-        const response = await axiosDAuthApiInstance(token).post(endpoints.createMultipleRooms, {
-          first_user_id: firstUserId //nguoi dung hien tai
-        });
-        return response.data;
-      } catch (ex) {
-        console.error(ex);
-        throw ex;
-      }
-    };
+      const endpoint = endpoints.getRoomByAccount(id); // Tạo endpoint động
+      const response = await axiosDAuthApiInstance(token).get(endpoint);
+      return response.data;
+    } catch (ex) {
+      console.error("Error in getRoomByAccount:", ex);
+      throw ex;
+    }
+  };

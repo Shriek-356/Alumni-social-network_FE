@@ -1,16 +1,18 @@
 import { useContext, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getPostCommentss } from '../../configs/API/PostApi';
+import { getPostCommentss,deletePosts } from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
 import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
-
-
 import axios from 'axios';
-import react from 'react';
+import { useNavigation } from '@react-navigation/native';
 
-function RenderPost({ item }) {
+function RenderPost({ item, onDelete}) {
+
+    const [menuVisible, setMenuVisible] = useState(false);
+    const navigation = useNavigation()
+
     const [reaction, setReaction] = useState();
     const [reactionID, setReactionID] = useState();
     const [comments, setComments] = useState([]);
@@ -19,6 +21,9 @@ function RenderPost({ item }) {
     const [token, setToken] = useState();
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
+
+
+    const isOwner = currentAccountUser.user === item.account.user; //Kiem tra xem bai viet do co phai la cua Account hien tai hay khong
 
     const [newComment, setNewComment] = useState({
         id: '',
@@ -46,7 +51,7 @@ function RenderPost({ item }) {
             }
         }
         fetchReactions()
-    }, [token])
+    }, [token,totalReactionAccountt])
 
     function processImageURL(url) {
         //Sau nay neu co anh mac dinh thi thay bang anh mac dinh neu bi loi
@@ -71,6 +76,7 @@ function RenderPost({ item }) {
         }
     }
 
+    //Lay token
     useEffect(() => {
         const fetchToken = async () => {
             const userToken = await getToken();
@@ -95,7 +101,7 @@ function RenderPost({ item }) {
         fetchComments()
     }, [item, token])
 
-    const test = async(reactionType)=>{
+    const test = async (reactionType) => {
         await handleReaction(reactionType)
     }
 
@@ -146,6 +152,7 @@ function RenderPost({ item }) {
         }
     };
 
+    
     const addComment = async () => {
 
         try {
@@ -177,7 +184,7 @@ function RenderPost({ item }) {
     };
 
     useEffect(() => {
-        if (totalReactionAccountt) {
+        if (Array.isArray(totalReactionAccountt)) {
             totalReactionAccountt.forEach(posts => {
                 if (posts && posts.post.id === item.id) {
                     setReaction(posts.reaction);
@@ -192,13 +199,41 @@ function RenderPost({ item }) {
 
             <View style={styles.header}>
                 <Image
-                    source={{ uri: processImageURL(item.avatar) || 'https://via.placeholder.com/50' }}
+                    source={{ uri: processImageURL(item.avatar) || 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_DH_M%E1%BB%9F_TPHCM.png' }}
                     style={styles.avatar}
                 />
                 <View>
-                    <Text style={styles.userName}>{item.full_name || 'User Name'}</Text>
+                    <Text style={styles.userName} onPress={()=>navigation.navigate('Profile',{thisAccount: item.account})}>{item.full_name || 'User Name'}</Text>
                     <Text style={styles.postDate}>{item.created_date}</Text>
                 </View>
+
+                {/* Nút ba chấm */}
+                {isOwner && (
+                    <View style={{ position: 'relative' }}>
+                        <TouchableOpacity
+                            onPress={() => setMenuVisible(!menuVisible)}
+                            style={styles.menuButton}
+                        >
+                            <FontAwesome name="ellipsis-v" size={20} color="#333" />
+                        </TouchableOpacity>
+
+                        {/* Menu hiện ngay bên dưới */}
+                        {menuVisible && (
+                            <View style={styles.menuContainer}>
+                                <TouchableOpacity
+                                     onPress={() => {
+                                        console.log('Xóa bài viết');
+                                        onDelete(); // Đảm bảo hàm được gọi
+                                      }}
+                                    style={styles.menuOption}
+                                >
+                                    <Text style={styles.menuOptionText}>Xóa bài viết</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                )}
+
             </View>
 
 
@@ -411,6 +446,31 @@ const styles = StyleSheet.create({
     loadMoreText: {
         color: '#fff',
         fontWeight: '600',
+    },
+    menuButton: {
+        paddingHorizontal: 100,
+    },
+    menuContainer: {
+        position: 'absolute',
+        top: 25, 
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 5,
+        padding: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 5,
+        zIndex: 100,
+    },
+    menuOption: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+    },
+    menuOptionText: {
+        fontSize: 16,
+        color: '#333',
     },
 });
 
