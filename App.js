@@ -8,6 +8,7 @@ import RegisterDetails from './Components/User/RegisterDetails';
 import { createContext } from 'react';
 import { useState } from 'react';
 import { useReducer } from 'react';
+import Profile from './Components/Home/Profile';
 
 const Stack = createStackNavigator();
 
@@ -55,6 +56,9 @@ export default function App() {
                     options={{ headerShown: false }}
                   />
                   <Stack.Screen name="AllView" component={AllView}
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="Profile" component={Profile}
                     options={{ headerShown: false }}
                   />
                 </Stack.Navigator>

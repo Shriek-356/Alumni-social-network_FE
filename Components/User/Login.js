@@ -32,7 +32,7 @@ function Login({ navigation: any }) {
 
     const saveToken = async (token) => {
         try {
-            await AsyncStorage.setItem('access_token', token);
+            await AsyncStorage.setItem('@access_token', token);
             console.log('Token đã được lưu: ', token);
         } catch (error) {
             console.error('Lỗi khi lưu token: ', error);
