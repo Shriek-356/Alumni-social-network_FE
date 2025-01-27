@@ -9,6 +9,7 @@ import { createContext } from 'react';
 import { useState } from 'react';
 import { useReducer } from 'react';
 import Profile from './Components/Home/Profile';
+import RoomScreen from './Components/ChatScreen/RoomScreen';
 
 const Stack = createStackNavigator();
 
