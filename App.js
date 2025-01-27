@@ -61,6 +61,8 @@ export default function App() {
                   <Stack.Screen name="Profile" component={Profile}
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen name="RoomScreen" component={RoomScreen}
+                  options={{ headerShown: false }}/>
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>
