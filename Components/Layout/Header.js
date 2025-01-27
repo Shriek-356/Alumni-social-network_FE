@@ -21,7 +21,7 @@ const Header =  () => {
                         />
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconBg} onPress={() => navigation.navigate('RoomScreen')}>
+                <TouchableOpacity style={styles.iconBg} onPress={() => navigation.navigate('ChatScreen')}>
                     <View>
                         <VectorIcon
                             name="chatbubble"
