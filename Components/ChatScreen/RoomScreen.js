@@ -1,105 +1,159 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getRoomByAccount } from "../../configs/API/roomApi";
-import { getCurrentUser } from "../../configs/api";
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native';
+import { getRoomByAccount } from '../../configs/API/roomApi'; 
+import { getToken } from '../../configs/api';
+import { CurrentUserContext } from '../../App'; 
+import { useNavigation } from '@react-navigation/native';
 
-const RoomScreen = () => {
-    const [rooms, setRooms] = useState([]); // Danh sách room chat
-    const [loading, setLoading] = useState(false); // Trạng thái loading
-    const [nextPage, setNextPage] = useState(null); // URL của trang tiếp theo
-  
-    // Hàm fetch rooms từ API
-    const fetchRooms = async (url = null) => {
-      try {
-        setLoading(true);
-        const token = await AsyncStorage.getItem("token");
-  
-        // Lấy thông tin người dùng hiện tại
-        const currentUser = await getCurrentUser(token);
-        const userId = currentUser.id; // Lấy ID người dùng hiện tại
-  
-        // Sử dụng endpoint động hoặc URL trang tiếp theo
-        const endpoint = url || `/room/${userId}/filter_rooms/`;
-        const response = await getRoomByAccount(token, userId);
-  
-        // Cập nhật danh sách rooms và URL trang tiếp theo
-        setRooms((prevRooms) => [...prevRooms, ...response.results]);
-        setNextPage(response.next);
-      } catch (error) {
-        Alert.alert("Lỗi", "Không thể tải danh sách phòng chat");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    // Load rooms khi màn hình được mở
+const ScreenRoom = () => {
+    const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [nextPage, setNextPage] = useState(null);
+    const [token, setToken] = useState(null);
+    const [currentUser] = useContext(CurrentUserContext);
+    const navigation = useNavigation();
+
+    
     useEffect(() => {
-      fetchRooms();
+        const fetchToken = async () => {
+            const userToken = await getToken();
+            setToken(userToken);
+        };
+        fetchToken();
     }, []);
-  
-    // Render từng room chat
-    const renderRoomItem = ({ item }) => {
-      const { second_user, seen, received_message_date } = item;
-      return (
-        <TouchableOpacity style={styles.roomItem}>
-          <Image source={{ uri: second_user.avatar }} style={styles.avatar} />
-          <View style={styles.roomInfo}>
-            <Text style={styles.name}>{second_user.full_name}</Text>
-            <Text style={styles.messageInfo}>
-              {seen ? "Đã xem" : "Chưa xem"} - {new Date(received_message_date).toLocaleString()}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    };
-  
-    // UI của màn hình Room
-    return (
-      <View style={styles.container}>
-        {loading && rooms.length === 0 ? (
-          <ActivityIndicator size="large" color="#007BFF" />
-        ) : (
-          <FlatList
-            data={rooms}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderRoomItem}
-            onEndReached={() => {
-              if (nextPage) fetchRooms(nextPage); // Tải thêm dữ liệu nếu có URL trang tiếp theo
-            }}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              nextPage && <ActivityIndicator size="small" color="#007BFF" />
+
+    
+    useEffect(() => {
+        const fetchRooms = async () => {
+            if (token && currentUser) {
+                try {
+                    setLoading(true);
+                    let response = await getRoomByAccount(token, currentUser.id);
+                    if (response && response.results) {
+                        setRooms(response.results);
+                        setNextPage(response.next);
+                    }
+                } catch (error) {
+                    console.log('Error fetching rooms:', error);
+                } finally {
+                    setLoading(false);
+                }
             }
-          />
-        )}
-      </View>
+        };
+        fetchRooms();
+    }, [token, currentUser]);
+
+    
+    const loadMoreRooms = async () => {
+        if (nextPage && !loadingMore) {
+            try {
+                setLoadingMore(true);
+                const response = await fetch(nextPage, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = await response.json();
+                if (data && data.results) {
+                    setRooms((prevRooms) => [...prevRooms, ...data.results]);
+                    setNextPage(data.next);
+                }
+            } catch (error) {
+                console.log('Error loading more rooms:', error);
+            } finally {
+                setLoadingMore(false);
+            }
+        }
+    };
+
+    // Render từng phòng
+    const renderRoomItem = ({ item }) => {
+        const cleanedAvatarUrl = item.second_user.avatar.replace('image/upload/', '');
+
+        return (
+            <View style={styles.roomItem}>
+                <Image source={{ uri: cleanedAvatarUrl }} style={styles.avatar} />
+                <View style={styles.infoContainer}>
+                    <Text style={styles.roomName}>{item.second_user.full_name}</Text>
+                    {item.second_user.account_status && (
+                        <View style={styles.statusContainer}>
+                            <View style={styles.activeIndicator} />
+                            <Text style={styles.statusText}>Đang hoạt động</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    return (
+        <View style={styles.container}>
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <FlatList
+                    data={rooms}
+                    renderItem={renderRoomItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    onEndReached={loadMoreRooms}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={
+                        loadingMore && <ActivityIndicator size="small" color="#0000ff" />
+                    }
+                />
+            )}
+        </View>
     );
-  };
-  
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f9f9f9", padding: 10 },
-    roomItem: {
-      flexDirection: "row",
-      padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#ddd",
-      alignItems: "center",
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 10,
     },
-    avatar: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
-    roomInfo: { flex: 1 },
-    name: { fontSize: 16, fontWeight: "bold", color: "#333" },
-    messageInfo: { fontSize: 14, color: "#888" },
-  });
-  
-  export default RoomScreen;
+    roomItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f9f9f9',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    avatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        marginRight: 15,
+    },
+    infoContainer: {
+        flex: 1,
+    },
+    roomName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    statusContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    activeIndicator: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: 'green',
+        marginRight: 5,
+    },
+    statusText: {
+        fontSize: 14,
+        color: 'green',
+    },
+});
+
+export default ScreenRoom;
