@@ -19,6 +19,7 @@ export const CurrentAccountUserContext = createContext()
 export const CurrentAlumniAccountContext = createContext()
 export const MyUserContext = createContext();
 export const TotalReactionAccountContext = createContext()
+export const RoomContext = createContext()
 export default function App() {
 
   const [RegisterInfo, setRegisterInfo] = useState({
@@ -37,6 +38,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState({})
   const [currentAccountUser, setCurrentAccountUser] = useState({})
   const [totalReactionAccount, setTotalReactionAccount] = useState({})
+  const [getRoom, setRoom] = useState({})
+
 
 
   return (
@@ -44,6 +47,7 @@ export default function App() {
       <TotalReactionAccountContext.Provider value={[totalReactionAccount, setTotalReactionAccount]}>
         <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
+            <RoomContext.Provider value={[getRoom,setRoom]}>
             <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
               <NavigationContainer>
                 <Stack.Navigator initialRouteName='Login'>
@@ -67,11 +71,10 @@ export default function App() {
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>
+            </RoomContext.Provider>
           </CurrentUserContext.Provider>
         </CurrentAccountUserContext.Provider>
       </TotalReactionAccountContext.Provider>
     </CurrentAlumniAccountContext.Provider>
   );
 }
-
-
