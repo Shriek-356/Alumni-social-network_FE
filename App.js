@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { useReducer } from 'react';
 import Profile from './Components/Home/Profile';
 import CreatePost from './Components/Home/PostCreation';
+import ChatScreen from './Components/ChatScreen/ChatScreen';
+import RoomScrenn from './Components/ChatScreen/RoomScreen';
 
 const Stack = createStackNavigator();
 
@@ -68,6 +70,13 @@ export default function App() {
                   /><Stack.Screen name="CreatePost" component={CreatePost}
                   options={{ headerShown: false }}
                 />
+                <Stack.Screen name="ChatScreen" component={ChatScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="RoomScreen" component={RoomScrenn}
+                  options={{ headerShown: false }}
+                />
+
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>
