@@ -9,6 +9,7 @@ import { createContext } from 'react';
 import { useState } from 'react';
 import { useReducer } from 'react';
 import Profile from './Components/Home/Profile';
+import CreatePost from './Components/Home/PostCreation';
 
 const Stack = createStackNavigator();
 
@@ -60,7 +61,9 @@ export default function App() {
                   />
                   <Stack.Screen name="Profile" component={Profile}
                     options={{ headerShown: false }}
-                  />
+                  /><Stack.Screen name="CreatePost" component={CreatePost}
+                  options={{ headerShown: false }}
+                />
                 </Stack.Navigator>
               </NavigationContainer>
             </RegisterInfoContext.Provider>

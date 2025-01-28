@@ -15,6 +15,9 @@ import { TotalReactionAccountContext } from "../../App";
 import { useFocusEffect } from "@react-navigation/native";
 import { deletePosts } from "../../configs/API/PostApi";
 import { useCallback } from "react";
+import { TouchableOpacity } from "react-native";
+import { StyleSheet } from "react-native";
+import axios from "axios";
 
 export default function Home() {
 
@@ -25,10 +28,10 @@ export default function Home() {
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [currentAlumniAccount, setCurrentAlumniAccount] = useContext(CurrentAlumniAccountContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
+    const [nextPage, setNextPage] = useState()
 
 
     const handleDeletePost = async (postId) => {
-        console.log('a')
         try {
             setLoading(true);
             await deletePosts(token, postId);
@@ -55,6 +58,7 @@ export default function Home() {
             try {
                 const data = await getAllPostss(token);
                 const postsData = data.results;
+                setNextPage(data.next)
                 const detailsPosts = postsData.map((post) => ({
                     ...post,
                     avatar: post.account.avatar,
@@ -69,23 +73,45 @@ export default function Home() {
         }
     }, [token]);
 
+    const loadMorePosts = async () => {
+        if (nextPage && token) {
+            console.log(nextPage)
+            try {
+                let responsee = await axios.get(nextPage, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                let postsData = responsee.data.results
+                const detailsPosts = postsData.map((post) => ({
+                    ...post,
+                    avatar: post.account.avatar,
+                    full_name: post.account.full_name
+                }));
+                setPosts([...posts, ...detailsPosts])
+                setNextPage(responsee.data.next)
+            }
+            catch (error) {
+                console.log("Error load more posts: ", error)
+            }
+        }
+    }
+
     //khi nguoi dung quay lai tab Home thi fetch lai posts va tat ca bai viet da cam xuc
     useFocusEffect(
         React.useCallback(() => {
             fetchPosts();
             fetchReactionsAccount();
-        }, [token])  
+        }, [token])
     );
 
     const fetchReactionsAccount = useCallback(async () => {
-            try {
-                let response = await getTotalReactionsAccountt(token, currentUser.id)
-                await setTotalReactionAccountt(response)
-            }
-            catch (error) {
-                console.log("Error get all reactions account: ", error)
-            }
-    }, [currentUser, token,posts])
+        try {
+            let response = await getTotalReactionsAccountt(token, currentAccountUser.user.id)
+            await setTotalReactionAccountt(response)
+        }
+        catch (error) {
+            console.log("Error get all reactions account: ", error)
+        }
+    }, [currentUser, token, posts])
 
 
     return (
@@ -96,10 +122,32 @@ export default function Home() {
                 <FlatList
                     data={posts}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => <RenderPost item={item} onDelete={()=>handleDeletePost(item.id)} />}
+                    renderItem={({ item }) => <RenderPost item={item} onDelete={() => handleDeletePost(item.id)} />}
                 />
             )}
+
+            {/* Tai them bai viet */}
+            {nextPage ? (<TouchableOpacity style={styless.loadMoreButton} onPress={loadMorePosts}>
+                <Text style={styless.loadMoreText}>Xem thêm bài viết</Text>
+            </TouchableOpacity>) : <Text></Text>}
+
         </View>
     )
 }
+
+const styless = StyleSheet.create({
+    loadMoreButton: {
+        backgroundColor: '#FF9900', 
+        paddingVertical: 10, 
+        paddingHorizontal: 20,
+        borderRadius: 15, 
+        alignItems: 'center', 
+        marginVertical: 10, 
+    },
+    loadMoreText: {
+        color: '#fff', 
+        fontSize: 16, 
+        fontWeight: 'bold', 
+    },
+});
 

@@ -1,29 +1,36 @@
 import { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getPostCommentss,deletePosts } from '../../configs/API/PostApi';
+import { getPostCommentss, deletePosts } from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
 import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { getImagess } from '../../configs/API/PostApi';
+import { ScrollView } from 'react-native';
+import { Pressable } from 'react-native';
 
-function RenderPost({ item, onDelete}) {
+function RenderPost({ item, onDelete }) {
 
     const [menuVisible, setMenuVisible] = useState(false);
     const navigation = useNavigation()
-
     const [reaction, setReaction] = useState();
     const [reactionID, setReactionID] = useState();
     const [comments, setComments] = useState([]);
     const [nextPage, setNextPage] = useState(null);
     const [totalReaction, setTotalReaction] = useState();
     const [token, setToken] = useState();
+    const [nextPageImage, setNextPageImage] = useState(null)
+    const [imagesPost,setImagesPost] = useState([])
+    const [loading,setLoading] = useState(false)
+    const [selectedImage,setSelectedImage] = useState(null)
+
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
 
 
-    const isOwner = currentAccountUser.user === item.account.user; //Kiem tra xem bai viet do co phai la cua Account hien tai hay khong
+    const isOwner = currentAccountUser.user.id === item.account.user.id; //Kiem tra xem bai viet do co phai la cua Account hien tai hay khong
 
     const [newComment, setNewComment] = useState({
         id: '',
@@ -42,7 +49,6 @@ function RenderPost({ item, onDelete}) {
             try {
                 let response = await getTotalReactionss(token, item.id)
                 if (response) {
-                    console.log("Reactions: ", response.total_reactions)
                     setTotalReaction(response.total_reactions)
                 }
             }
@@ -51,7 +57,38 @@ function RenderPost({ item, onDelete}) {
             }
         }
         fetchReactions()
-    }, [token,totalReactionAccountt])
+    }, [token, totalReactionAccountt])
+
+    //Lay danh sach Hinh Anh cua bai viet
+    useEffect(() => {
+        const fetchPostImages = async () => {
+            console.log("token: ", token)
+            console.log("id: ", item.id)
+            if (token && item.id) {
+                setLoading(true)
+                try {
+                    const response = await axios.get(`https://socialapp130124.pythonanywhere.com//post/${item.id}/images/`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if(response.data.count>0){
+                        setImagesPost(response.data.results)
+                    }
+                    
+                }
+                catch (error) {
+                    console.log("Error get post images: ", error)
+                }
+                finally{
+                    setLoading(false)
+                }
+            }
+        }
+        fetchPostImages()
+    }, [token, item])
 
     function processImageURL(url) {
         //Sau nay neu co anh mac dinh thi thay bang anh mac dinh neu bi loi
@@ -68,7 +105,6 @@ function RenderPost({ item, onDelete}) {
                 })
                 setComments([...comments, ...respone.data.results])
                 setNextPage(respone.next);
-                console.log(respone.data)
             }
             catch (error) {
                 console.log("Error fetching MoreComments: ", error)
@@ -90,8 +126,7 @@ function RenderPost({ item, onDelete}) {
             if (item && token) {
                 try {
                     let dataComments = await getPostCommentss(token, item.id)
-                    await setComments(dataComments.results || [])
-                    console.log(dataComments)
+                    setComments(dataComments.results || [])
                     setNextPage(dataComments.next)
                 } catch (error) {
                     console.log("Fetch comments error: ", error)
@@ -108,11 +143,9 @@ function RenderPost({ item, onDelete}) {
     //Ham xu ly khi nguoi dung tha cam xuc
     const handleReaction = async (reactionType) => {
         if (reaction && reaction === reactionType) {
-            console.log(reactionID)//Neu dang co cam xuc va giong cai cu thi xoa
+            //Neu dang co cam xuc va giong cai cu thi xoa
             try {
                 let response = await deleteReactionss(token, reactionID)
-                console.log("Delete reactions: ", response)
-                console.log(reactionID)
                 setReaction('')
                 setTotalReaction((prev) => prev - 1);
             } catch (error) {
@@ -126,8 +159,6 @@ function RenderPost({ item, onDelete}) {
                     reaction: reactionType
                 }
                 let response = await updateReactionss(token, reactionID, dataReactions)
-                console.log("Update reactions: ", response)
-                console.log(reactionID)
                 setReaction(reactionType)
             } catch (error) {
                 console.log("Error update reactions: ", error)
@@ -137,12 +168,10 @@ function RenderPost({ item, onDelete}) {
             try {
                 const dataReactions = {
                     reaction: reactionType,
-                    account: currentAccountUser.user,
+                    account: currentAccountUser.user.id,
                     post: item.id
                 }
-                console.log(dataReactions)
                 let response = await addReactionss(token, dataReactions)
-                console.log("Add reactions: ", response)
                 setReaction(reactionType)
                 setReactionID(response.id)//Cap nhat id reaction vi neu them cam xuc moi thi id se thay doi, khong dung id truoc do duoc
                 setTotalReaction((prev) => prev + 1);
@@ -152,7 +181,7 @@ function RenderPost({ item, onDelete}) {
         }
     };
 
-    
+
     const addComment = async () => {
 
         try {
@@ -169,7 +198,6 @@ function RenderPost({ item, onDelete}) {
                 let respone = await addPostCommentss(token, commentsJson)
 
                 if (respone) {
-                    console.log(respone)
                     const updateComments = {
                         ...newComment,
                         created_date: new Date().toISOString().split('T')[0]
@@ -203,7 +231,7 @@ function RenderPost({ item, onDelete}) {
                     style={styles.avatar}
                 />
                 <View>
-                    <Text style={styles.userName} onPress={()=>navigation.navigate('Profile',{thisAccount: item.account})}>{item.full_name || 'User Name'}</Text>
+                    <Text style={styles.userName} onPress={() => navigation.navigate('Profile', { thisAccount: item.account })}>{item.full_name || 'User Name'}</Text>
                     <Text style={styles.postDate}>{item.created_date}</Text>
                 </View>
 
@@ -221,10 +249,10 @@ function RenderPost({ item, onDelete}) {
                         {menuVisible && (
                             <View style={styles.menuContainer}>
                                 <TouchableOpacity
-                                     onPress={() => {
+                                    onPress={() => {
                                         console.log('Xóa bài viết');
                                         onDelete(); // Đảm bảo hàm được gọi
-                                      }}
+                                    }}
                                     style={styles.menuOption}
                                 >
                                     <Text style={styles.menuOptionText}>Xóa bài viết</Text>
@@ -239,14 +267,55 @@ function RenderPost({ item, onDelete}) {
 
             <Text style={styles.postContent}>{item.post_content}</Text>
 
+            {loading && <Text>Đang tải hình ảnh...</Text>}
 
-            {item.image && (
-                <Image
-                    source={{ uri: item.image }}
-                    style={styles.postImage}
-                />
-            )}
+            {/* Danh sách hình ảnh */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {imagesPost.length > 0 ? (
+                    imagesPost.map((image, index) => (
+                        <TouchableOpacity key={index} onPress={() => {setSelectedImage(processImageURL(image.post_image_url))}}>
+                            <Image
+                                source={{ uri: processImageURL(image.post_image_url) }}
+                                style={styles.image}
+                                resizeMode="cover"
+                            />
+                        </TouchableOpacity>
+                    ))
+                ) : (
+                    <Text>Không có hình ảnh nào.</Text>
+                )}
+            </ScrollView>
 
+
+            {/* Modal hiển thị ảnh phóng to */}
+            <Modal
+                visible={!!selectedImage}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSelectedImage(null)}
+            >
+                <View style={styles.modalContainer}>
+                    {/* Vùng nhấn bên ngoài để đóng */}
+                    <Pressable style={styles.overlay} onPress={() => setSelectedImage(null)} />
+
+                    {/* Hình ảnh phóng to */}
+                    <View style={styles.modalContent}>
+                        {selectedImage && (
+                            <Image
+                                source={{ uri: selectedImage }}
+                                style={styles.zoomedImage}
+                                resizeMode="contain"
+                            />
+                        )}
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => setSelectedImage(null)}
+                        >
+                            <Text style={styles.closeButtonText}>Đóng</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             <View style={styles.footer}>
                 <Text>{totalReaction}</Text>
@@ -452,7 +521,7 @@ const styles = StyleSheet.create({
     },
     menuContainer: {
         position: 'absolute',
-        top: 25, 
+        top: 25,
         right: 0,
         backgroundColor: 'white',
         borderRadius: 5,
@@ -471,6 +540,44 @@ const styles = StyleSheet.create({
     menuOptionText: {
         fontSize: 16,
         color: '#333',
+    },
+    image: {
+        width: 200,
+        height: 200,
+        borderRadius: 10,
+        marginRight: 10,
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.8)", // Màu nền mờ
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject, // Làm vùng nền phủ toàn màn hình
+    },
+    modalContent: {
+        width: "90%",
+        height: "70%",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    zoomedImage: {
+        width: "100%",
+        height: "100%",
+    },
+    closeButton: {
+        position: "absolute",
+        bottom: 20,
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+    },
+    closeButtonText: {
+        color: "#333",
+        fontSize: 16,
+        fontWeight: "bold",
     },
 });
 

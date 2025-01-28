@@ -9,33 +9,24 @@ import RenderPost from "../Post/Post";
 import { deletePosts } from '../../configs/API/PostApi';
 import { getTotalReactionsAccountt } from '../../configs/API/PostApi';
 import { TotalReactionAccountContext } from '../../App';
+import { useNavigation } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
 
 
 const Profile = ({ route }) => {
 
     const [loading, setLoading] = useState(true)
-
+    const navigation = useNavigation()
     const [posts, setPosts] = useState([])
     const { thisAccount } = route.params;
     const [token, setToken] = useState();
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
+    const [nextPage, setNextPage] = useState()
 
-    const isOwner = thisAccount.user === currentAccountUser.user
-
-    useEffect(() => {
-            const fetchReactionsAccount = async () => {
-                try {
-                    let response = await getTotalReactionsAccountt(token, thisAccount.id)
-                   await setTotalReactionAccountt(response)
-                }
-                catch (error) {
-                    console.log("Error get all reactions account: ", error)
-                }
-            }
-            fetchReactionsAccount()
-        }, [ token,posts])
-
+    const isOwner = thisAccount.user.id === currentAccountUser.user.id
     //lay token
     useEffect(() => {
         const fetchToken = async () => {
@@ -45,47 +36,74 @@ const Profile = ({ route }) => {
         fetchToken();
     }, []);
 
-    //Lay bai viet cua thisAccount
-    useEffect(() => {
-        const fetchPosts = async () => {
-            if (token) {
-                try {
-                    let data = await getUserPostss(token, thisAccount.user)
-                    const postsData = data
-                    //Lay data bai viet xong thi lay thong tin account cua bai viet do
-                    const detailsPosts = postsData.map((post) => ({
-                        ...post,
-                        avatar: post.account.avatar,
-                        full_name: post.account.full_name
-                    }));
-                    setPosts(detailsPosts)
-                } catch (err) {
-                    console.log("Error fetch Posts: ", err)
-                }
-                finally {
-                    setLoading(false)
-                }
+    useFocusEffect(
+        React.useCallback(() => {
+            fetchPosts(); // Hàm fetch bài viết mới nhất
+        }, [token])
+    );
+
+    //Lay bai viet cua thisAccount duoc nhan vao de xem profile
+    const fetchPosts = useCallback(async () => {
+        if (token) {
+            setLoading(true)
+            try {
+                let data = await getUserPostss(token, thisAccount.user.id)
+                const postsData = data.results
+                //Lay data bai viet xong thi lay thong tin account cua bai viet do
+                const detailsPosts = postsData.map((post) => ({
+                    ...post,
+                    avatar: post.account.avatar,
+                    full_name: post.account.full_name
+                }));
+
+                setPosts(detailsPosts)
+                setNextPage(data.next)
+            } catch (err) {
+                console.log("Error fetch Posts: ", err)
+            }
+            finally {
+                setLoading(false)
             }
         }
-        fetchPosts()
-    }, [token, thisAccount]);//chay lai khi token thay doi, tuc la khi token duoc cap nhat
+    }, [token]);//chay lai khi token thay doi, tuc la khi token duoc cap nhat
 
-    function test() {
-        console.log(thisAccount)
+
+    const loadMorePosts = async () => {
+        if (nextPage && token) {
+            try {
+                let responsee = await axios.get(nextPage, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                let postsData = responsee.data.results
+                const detailsPosts = postsData.map((post) => ({
+                    ...post,
+                    avatar: post.account.avatar,
+                    full_name: post.account.full_name
+                }));
+                setPosts([...posts, ...detailsPosts])
+                setNextPage(responsee.data.next)
+            }
+            catch (error) {
+                console.log("Error load more posts: ", error)
+            }
+        }
     }
 
+    //Lay bai viet ma nguoi dung da tha cam xuc de hien thi len giao dien
     useEffect(() => {
-            const fetchReactionsAccount = async () => {
+        const fetchReactionsAccount = async () => {
+            if (token) {
                 try {
-                    let response = await getTotalReactionsAccountt(token, thisAccount.user)
-                    setTotalReactionAccountt(response)
+                    let response = await getTotalReactionsAccountt(token, currentAccountUser.user.id)
+                    await setTotalReactionAccountt(response)
                 }
                 catch (error) {
                     console.log("Error get all reactions account: ", error)
                 }
             }
-            fetchReactionsAccount()
-        }, [token,posts])
+        }
+        fetchReactionsAccount()
+    }, [token, posts])
 
     function processImageURL(url) {
         //Sau nay neu co anh mac dinh thi thay bang anh mac dinh neu bi loi
@@ -100,7 +118,6 @@ const Profile = ({ route }) => {
             setLoading(true);
             await deletePosts(token, postId);
             setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId)); // Loai bo bai viet da xoa trong state posts
-            console.log(posts)
         } catch (error) {
             console.log("Error deleting post:", error);
         } finally {
@@ -137,14 +154,14 @@ const Profile = ({ route }) => {
             </View>
 
             {isOwner ? (<TouchableOpacity style={styles.createPostButton}
-                onPress={test}
+                onPress={() => navigation.navigate('CreatePost')}
             >
                 <Text style={styles.createPostText}>Tạo bài viết</Text>
             </TouchableOpacity>) : (
                 <Text></Text>
             )}
 
-            {posts&&Array.isArray(posts)&&posts.length>0 ? (<View style={styles.container}>
+            {posts && Array.isArray(posts) && posts.length > 0 ? (<View style={styles.container}>
                 {loading && !thisAccount ? (
                     <ActivityIndicator size="large" color="#0000ff" />
                 ) : (
@@ -157,12 +174,15 @@ const Profile = ({ route }) => {
                     />
                 )}
             </View>) : (
-                <View style={{justifyContent:'center',alignItems:'center',flex:1}}>
-                    <Text style={{color:'#888888', fontSize:18, fontWeight:'bold'}}>Chưa có bài viết</Text>
+                <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                    <Text style={{ color: '#888888', fontSize: 18, fontWeight: 'bold' }}>Chưa có bài viết</Text>
                 </View>
             )}
-            
 
+            {/* Tai them bai viet */}
+            {nextPage ? (<TouchableOpacity style={styles.loadMoreButton} onPress={loadMorePosts}>
+                <Text style={styles.loadMoreText}>Xem thêm bài viết</Text>
+            </TouchableOpacity>) : <Text></Text>}
         </View>
     );
 };
@@ -228,5 +248,17 @@ const styles = StyleSheet.create({
     postContent: {
         fontSize: 16,
         color: '#333',
+    }, loadMoreButton: {
+        backgroundColor: '#FF9900',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 15,
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    loadMoreText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

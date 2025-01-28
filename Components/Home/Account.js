@@ -104,12 +104,12 @@ const Account = ({ navigation }) => {
             setCurrentAccountUser(null)
 
             navi.reset({
-                index: 0, // reset stack về màn hình đầu tiên
-                routes: [{ name: 'Login' }], // điều hướng đến màn hình Login
+                index: 0, // reset stack 
+                routes: [{ name: 'Login' }],
             });
             console.log("Đăng xuất thành công");
         } catch (error) {
-            // Nếu có lỗi xảy ra trong quá trình đăng xuất
+            
             console.error("Lỗi khi đăng xuất: ", error);
         }
     };
