@@ -61,6 +61,7 @@ const ChatScreen = () => {
             }
         }
     };
+    //Chưa xử lý seen
 
     const renderMessItem = ({ item }) => {
         const isCurrentUser = item.who_sent.user.id === room.first_user.user.id;
@@ -93,9 +94,9 @@ const ChatScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Chat Room</Text>
-            <Text style={styles.roomInfo}>ID phòng: {room?.id}</Text>
-            <Text style={styles.roomInfo}>Tên người dùng: {room?.second_user?.full_name}</Text>
+            <Text style={styles.title}>Tin nhắn</Text>
+            
+            <Text style={styles.roomInfo}>{room?.second_user?.full_name}</Text>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" />
