@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native';
 import { getRoomByAccount } from '../../configs/API/roomApi'; 
 import { getToken } from '../../configs/api';
-import { CurrentUserContext } from '../../App'; 
+import { CurrentUserContext, RoomContext } from '../../App'; 
 import { useNavigation } from '@react-navigation/native';
+import moment from 'moment'; 
 
 const ScreenRoom = () => {
     const [rooms, setRooms] = useState([]);
@@ -13,6 +14,7 @@ const ScreenRoom = () => {
     const [token, setToken] = useState(null);
     const [currentUser] = useContext(CurrentUserContext);
     const navigation = useNavigation();
+    const [getRoom,setRoom] = useContext(RoomContext)
 
     
     useEffect(() => {
@@ -68,19 +70,45 @@ const ScreenRoom = () => {
     // Render từng phòng
     const renderRoomItem = ({ item }) => {
         const cleanedAvatarUrl = item.second_user.avatar.replace('image/upload/', '');
-
+        const lastLogin = item.second_user.user.last_login;
+        const lastSeenMinutesAgo = lastLogin ? moment().diff(moment(lastLogin), 'minutes') : null;
+    
+        const isOnline = lastSeenMinutesAgo !== null && lastSeenMinutesAgo < 5;
+        const statusText = isOnline
+            ? 'Đang hoạt động'
+            : lastSeenMinutesAgo !== null
+            ? `Hoạt động ${lastSeenMinutesAgo} phút trước`
+            : 'Chưa hoạt động';
+    //Lưu context room truyền vào mess
+    const navigateToChatScreen = (room) => {
+        setRoom(room);
+        navigation.navigate('ChatScreen')
+    }
+    
         return (
             <View style={styles.roomItem}>
                 <Image source={{ uri: cleanedAvatarUrl }} style={styles.avatar} />
                 <View style={styles.infoContainer}>
                     <Text style={styles.roomName}>{item.second_user.full_name}</Text>
-                    {item.second_user.account_status && (
-                        <View style={styles.statusContainer}>
-                            <View style={styles.activeIndicator} />
-                            <Text style={styles.statusText}>Đang hoạt động</Text>
-                        </View>
-                    )}
+                    <View style={styles.statusContainer}>
+                        <View
+                            style={[
+                                styles.activeIndicator,
+                                { backgroundColor: isOnline ? 'green' : 'gray' },
+                            ]}
+                        />
+                        <Text style={[styles.statusText, { color: isOnline ? 'green' : 'gray' }]}>
+                            {statusText}
+                        </Text>
+                    </View>
                 </View>
+                 {/* Chuyển ChatScreen */}
+                <Text
+                   
+                    style={styles.joinChat}
+                    onPress={()=> navigateToChatScreen(item)}>
+                        Chat
+                </Text>
             </View>
         );
     };
@@ -147,13 +175,12 @@ const styles = StyleSheet.create({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: 'green',
         marginRight: 5,
     },
     statusText: {
         fontSize: 14,
-        color: 'green',
     },
 });
+
 
 export default ScreenRoom;

@@ -8,7 +8,7 @@ const endpoints = {
       
     'getCurrentUser':'/users/current_user/',
     'getAccountUser': (id) => `/users/${id}/account/`,
-    
+    "updateLastLogin": "users/update_last_login/"
    
 }
 
@@ -67,6 +67,9 @@ export const saveeToken = async (token) => {
 export const getToken = async () => {
     try {
         const token = await AsyncStorage.getItem('@access_token');
+        if(token){
+            await updateLastLogin(token);
+        }
         return token; // Trả về token
     } catch (error) {
         console.error('Lỗi khi lấy token: ', error);
@@ -83,3 +86,13 @@ export const removeToken = async () => {
         console.error('Lỗi khi xóa token: ', error);
     }
 };
+
+//Cập nhật lastlogin
+export const updateLastLogin = async (token) =>{
+    try{
+        const response = await axiosDAuthApiInstance(token).post(endpoints.updateLastLogin)
+    }catch (ex) {
+        console.log('Lỗi khi cập nhật last_login: ', ex);
+        throw ex;
+}
+}
