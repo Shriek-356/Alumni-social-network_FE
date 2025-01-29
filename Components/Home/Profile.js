@@ -58,6 +58,7 @@ const Profile = ({ route }) => {
 
                 setPosts(detailsPosts)
                 setNextPage(data.next)
+                console.log("NextPage: ", data.next)
             } catch (err) {
                 console.log("Error fetch Posts: ", err)
             }
@@ -75,6 +76,7 @@ const Profile = ({ route }) => {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 let postsData = responsee.data.results
+                console.log("id bai viet trang 2: ",postsData)
                 const detailsPosts = postsData.map((post) => ({
                     ...post,
                     avatar: post.account.avatar,
@@ -82,6 +84,7 @@ const Profile = ({ route }) => {
                 }));
                 setPosts([...posts, ...detailsPosts])
                 setNextPage(responsee.data.next)
+                console.log(responsee.data.next)
             }
             catch (error) {
                 console.log("Error load more posts: ", error)

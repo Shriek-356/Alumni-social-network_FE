@@ -2,38 +2,6 @@ import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const baseURL = 'https://socialapp130124.pythonanywhere.com/'
 
-//có gán baseURL ở hàm dưới rồi -> có viết api của chat trong này luôn
-const endpoints = {
-
-      
-    'getCurrentUser':'/users/current_user/',
-    'getAccountUser': (id) => `/users/${id}/account/`,
-    "updateLastLogin": "users/update_last_login/"
-   
-}
-
-export const getCurrentUser = async(token) => {
-    try{
-        let response = await axiosDAuthApiInstance(token).get(endpoints.getCurrentUser)
-        return response.data
-    }
-    catch(ex){
-        console.log(ex)
-        throw(ex)
-    }
-}
-
-export const getAccountUser = async(token,id) => {
-    try{
-        let response = await axiosDAuthApiInstance(token).get(endpoints.getAccountUser(id))
-        return response.data
-    }
-    catch(ex){
-        console.log(ex)
-        throw(ex)
-    }
-}
-
 const axiosInstance = axios.create({
     baseURL:baseURL,
     timeout:5000
@@ -67,9 +35,6 @@ export const saveeToken = async (token) => {
 export const getToken = async () => {
     try {
         const token = await AsyncStorage.getItem('@access_token');
-        if(token){
-            await updateLastLogin(token);
-        }
         return token; // Trả về token
     } catch (error) {
         console.error('Lỗi khi lấy token: ', error);
@@ -86,13 +51,3 @@ export const removeToken = async () => {
         console.error('Lỗi khi xóa token: ', error);
     }
 };
-
-//Cập nhật lastlogin
-export const updateLastLogin = async (token) =>{
-    try{
-        const response = await axiosDAuthApiInstance(token).post(endpoints.updateLastLogin)
-    }catch (ex) {
-        console.log('Lỗi khi cập nhật last_login: ', ex);
-        throw ex;
-}
-}

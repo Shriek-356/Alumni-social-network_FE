@@ -12,7 +12,7 @@ const endpoints = {
     'deletePost': (id) => `/post/${id}/`,
     'uploadImagesPost': "/post_images/upload_multi_images/",
     'createPost': '/post/',
-    'getPostImages':(id) => `/post/${id}/images/`
+    'getImages' : (id) => `/post/${id}/images/`
 }
 
 export const getAllPostss = async (token) => {
@@ -138,13 +138,14 @@ export const creatNewPost = async (token, data) => {
     }
 }
 
-export const getPostImagess = async (token,id)=>{
-    try {
-        let response = await axiosDAuthApiInstance(token).post(endpoints.getPostImages(id))
+export const getImagess = async(token,id) => {
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.getImages(id))
         return response.data
-    } catch (ex) {
+    }
+    catch(ex){
         console.log(ex)
-        throw (ex)
+        throw(ex)
     }
 }
 

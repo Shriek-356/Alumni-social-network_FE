@@ -11,7 +11,7 @@ const Header =  () => {
         <View style={styles.headerContainer}>
             <Image source={logo} style={styles.LogoStyle} />
             <View style={styles.headerIcons}>
-                <TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('Search')}>
+                <TouchableOpacity style={styles.icon} onPress={() => navigation.navigate('SearchScreen')}>
                     <View>
                         <VectorIcon
                             name="search-sharp"

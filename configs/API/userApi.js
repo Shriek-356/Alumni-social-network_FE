@@ -11,6 +11,7 @@ const endpoints = {
     'getAccountUser': (id) => `/users/${id}/account/`,
     'getAlumniAccount': (id) => `/alumni_accounts/${id}/`,
     'getUserPosts': (id) => `/accounts/${id}/post/`,
+    'searchUsers':(value) => `/users/search_account/?full_name=${value}`
 }
 
 export const fetchUsers = async () =>{
@@ -105,4 +106,13 @@ export const getUserPostss = async(token,id) => {
     }
 }
 
+export const searchUserss = async(token,value) =>{
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.searchUsers(value))
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
 
