@@ -1,17 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import { RoomContext } from "../../App";
-import { Text, View, StyleSheet, Image, FlatList, ActivityIndicator } from "react-native";
-import { getMessbyRoom } from "../../configs/API/roomApi";
+import { Text, View, StyleSheet, Image, FlatList, ActivityIndicator, TextInput, TouchableOpacity } from "react-native";
+import { getMessbyRoom, sendMess } from "../../configs/API/roomApi";
 import { useNavigation } from "@react-navigation/native";
 import { getToken } from "../../configs/api";
 
 const ChatScreen = () => {
     const [mess, setMess] = useState([]);
-    const [room] = useContext(RoomContext);
+    const [room] = useContext(RoomContext) || [{}]; 
+
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [nextPage, setNextPage] = useState(null);
+    const [newMess, setNewMess] = useState("");
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -22,24 +24,28 @@ const ChatScreen = () => {
         fetchToken();
     }, []);
 
-    useEffect(() => {
-        const fetchMess = async () => {
-            if (token && room) {
-                try {
-                    setLoading(true);
-                    const response = await getMessbyRoom(token, room.id);
-                    if (response && response.results) {
-                        setMess(response.results);
-                        setNextPage(response.next);
-                    }
-                } catch (error) {
-                    console.log("Error fetching messages", error);
-                } finally {
-                    setLoading(false);
+    // Định nghĩa lại hàm fetchMess ở ngoài useEffect
+    const fetchMess = async () => {
+        if (token && room) {
+            try {
+                setLoading(true);
+                const response = await getMessbyRoom(token, room.id);
+                if (response && response.results) {
+                    setMess(response.results);
+                    setNextPage(response.next);
                 }
+            } catch (error) {
+                console.log("Error fetching messages", error);
+            } finally {
+                setLoading(false);
             }
-        };
-        fetchMess();
+        }
+    };
+
+    
+
+    useEffect(() => {
+        fetchMess(); // Gọi fetchMess khi token hoặc room thay đổi
     }, [token, room]);
 
     const loadMoreMess = async () => {
@@ -61,10 +67,15 @@ const ChatScreen = () => {
             }
         }
     };
-    //Chưa xử lý seen
 
     const renderMessItem = ({ item }) => {
-        const isCurrentUser = item.who_sent.user.id === room.first_user.user.id;
+        const isCurrentUser = item.who_sent?.user?.id === room.first_user.user.id;
+        const avatarUrl = isCurrentUser
+            ? room.first_user.avatar
+            : room.second_user.avatar;
+        
+        const fullAvatarUrl = avatarUrl.replace("image/upload/", "");
+
         return (
             <View
                 style={[
@@ -75,7 +86,7 @@ const ChatScreen = () => {
                 <View style={styles.avatarContainer}>
                     <Image
                         source={{
-                            uri: isCurrentUser ? room.first_user.avatar : room.second_user.avatar,
+                            uri: `${fullAvatarUrl}`,
                         }}
                         style={styles.avatar}
                     />
@@ -91,6 +102,33 @@ const ChatScreen = () => {
             </View>
         );
     };
+
+    const handleSendMessage = async () => {
+        if (newMess.trim() !== "") {
+            try {
+                console.log("Đang gửi tin nhắn...");
+                const response = await sendMess(token, newMess,room.first_user.user.id, room.id);
+                if (response) {
+                    console.log("Tin nhắn đã được gửi:", response);
+                    const newMessage = {
+                        ...response,
+                        who_sent: {
+                            user: { id: room.first_user.user.id } // Đảm bảo đây là user.id của first_user tren giao dien 
+                        }
+                    };
+                    setMess((prevMess) => [...prevMess, newMessage]);
+                    setNewMess("");
+                    fetchMess()
+                   
+                }
+            } catch (error) {
+                console.log("Lỗi gửi tin nhắn", error);
+            }
+        } else {
+            console.log("Tin nhắn trống!");
+        }
+    };
+    
 
     return (
         <View style={styles.container}>
@@ -112,6 +150,18 @@ const ChatScreen = () => {
                     ListFooterComponent={loadingMore && <ActivityIndicator size="small" />}
                 />
             )}
+
+            <View style={styles.inputContainer}>
+                <TextInput 
+                    style={styles.input}
+                    placeholder="Nhập tin nhắn..."
+                    value={newMess}
+                    onChangeText={setNewMess}
+                />
+                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                    <Text style={styles.sendText}>Gửi</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -119,52 +169,66 @@ const ChatScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
-        padding: 10,
+        backgroundColor: "#f8f8f8", 
+        padding: 15,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: "bold",
-        marginBottom: 10,
+        marginBottom: 15,
+        color: "#333",
     },
     roomInfo: {
-        fontSize: 16,
-        marginBottom: 5,
+        fontSize: 18,
+        marginBottom: 10,
+        fontWeight: "500",
+        color: "#666",
     },
     messageContainer: {
         flexDirection: "row",
-        padding: 10,
+        padding: 12,
         alignItems: "center",
-        marginVertical: 5,
+        marginVertical: 8,
+        borderRadius: 10,
+        backgroundColor: "#fff", 
+        shadowColor: "#000", 
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
     },
     currentUserMessage: {
         justifyContent: "flex-end",
         alignSelf: "flex-end",
+        backgroundColor: "#f2f2f2", 
     },
     otherUserMessage: {
         justifyContent: "flex-start",
         alignSelf: "flex-start",
+        backgroundColor: "#f2f2f2", 
     },
     avatarContainer: {
         marginRight: 10,
     },
     avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        borderWidth: 2,
+        borderColor: "#ddd", 
     },
     messageContent: {
         maxWidth: "80%",
-        backgroundColor: "#f0f0f0",
-        padding: 10,
-        borderRadius: 10,
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: "#f9f9f9", 
+        elevation: 2,
     },
     messageText: {
-        fontSize: 14,
+        fontSize: 16,
         color: "#333",
     },
     timestamp: {
-        fontSize: 10,
+        fontSize: 12,
         color: "#aaa",
         marginTop: 5,
     },
@@ -173,6 +237,29 @@ const styles = StyleSheet.create({
         color: "green",
         marginTop: 5,
     },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    input: {
+        flex: 1,
+        height: 40,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 20,
+        paddingLeft: 15,
+    },
+    sendButton: {
+        marginLeft: 10,
+        backgroundColor: '#4CAF50',
+        padding: 10,
+        borderRadius: 20,
+    },
+    sendText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    }
 });
 
 export default ChatScreen;
