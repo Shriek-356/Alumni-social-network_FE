@@ -95,7 +95,7 @@ const RegisterLecturer = () => {
                 onChangeText={(text) => handleInputChange('first_name', text)}
             />
 
-            {/* 🔹 Thêm TextInput cho số điện thoại */}
+            
             <TextInput
                 style={styles.input}
                 placeholder="Số điện thoại"
@@ -104,10 +104,10 @@ const RegisterLecturer = () => {
                 onChangeText={(text) => handleInputChange('phone', text)}
             />
 
-            {/* Ngày sinh */}
+            
             <TouchableOpacity style={styles.datePicker} onPress={showDatepicker}>
                 <Text >
-                    {dateOfBirth.toLocaleDateString()}  {/* Hiển thị ngày đã chọn */}
+                    {dateOfBirth.toLocaleDateString()} 
                 </Text>
             </TouchableOpacity>
             {showDatePicker && (
@@ -120,7 +120,7 @@ const RegisterLecturer = () => {
                 />
             )}
 
-            {/* Giới tính */}
+            
             <Text style={styles.inputLabel}>Giới Tính</Text>
             <Picker
                 selectedValue={formData.gender}
