@@ -11,7 +11,9 @@ const endpoints = {
     'getAccountUser': (id) => `/users/${id}/account/`,
     'getAlumniAccount': (id) => `/alumni_accounts/${id}/`,
     'getUserPosts': (id) => `/accounts/${id}/post/`,
-    'searchUsers':(value) => `/users/search_account/?full_name=${value}`
+    'searchUsers':(value) => `/users/search_account/?full_name=${value}`,
+    'getAlumni' : "/alumni_accounts/",
+    'approvalAlumni' :(id) => `/alumni-accounts/${15}/`
 }
 
 export const fetchUsers = async () =>{
@@ -109,6 +111,26 @@ export const getUserPostss = async(token,id) => {
 export const searchUserss = async(token,value) =>{
     try{
         let response = await axiosDAuthApiInstance(token).get(endpoints.searchUsers(value))
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const getAlumnis = async(token) =>{
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.getAlumni)
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const approvalAlumnis = async(token,id)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.approvalAlumni(id))
         return response.data
     }catch(ex){
         console.log(ex)

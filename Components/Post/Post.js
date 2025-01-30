@@ -1,13 +1,12 @@
 import { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getPostCommentss, deletePosts } from '../../configs/API/PostApi';
+import { getPostCommentss} from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
 import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import { getImagess } from '../../configs/API/PostApi';
 import { ScrollView } from 'react-native';
 import { Pressable } from 'react-native';
 
@@ -104,7 +103,7 @@ function RenderPost({ item, onDelete }) {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 setComments([...comments, ...respone.data.results])
-                setNextPage(respone.next);
+                setNextPage(respone.data.next);
             }
             catch (error) {
                 console.log("Error fetching MoreComments: ", error)

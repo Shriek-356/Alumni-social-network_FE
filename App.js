@@ -11,7 +11,7 @@ import CreatePost from './Components/Home/PostCreation';
 import ChatScreen from './Components/ChatScreen/ChatScreen';
 import ScreenRoom from './Components/ChatScreen/RoomScreen';
 import SearchScreen from './Components/ChatScreen/SearchScreen';
-
+import ApprovalScreen from './Components/Home/ApprovalScreen';
 const Stack = createStackNavigator();
 
 export const RegisterInfoContext = createContext()
@@ -76,6 +76,9 @@ export default function App() {
                       options={{ headerShown: false }}
                     />
                     <Stack.Screen name="SearchScreen" component={SearchScreen}
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen name="ApprovalScreen" component={ApprovalScreen}
                       options={{ headerShown: false }}
                     />
                   </Stack.Navigator>

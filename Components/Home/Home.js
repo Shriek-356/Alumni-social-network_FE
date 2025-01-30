@@ -1,10 +1,8 @@
 import { View, Text, map } from "react-native";
-import styles from "../../styles/styles";
 import Styles from "./Styles";
 import { useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
-import { getUserPostss } from "../../configs/API/userApi";
 import { getToken } from "../../configs/api";
 import { useContext } from "react";
 import React from "react";
@@ -26,7 +24,6 @@ export default function Home() {
     const [token, setToken] = useState();
     const [currentUser, setCurrentUser] = useContext(CurrentUserContext)
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
-    const [currentAlumniAccount, setCurrentAlumniAccount] = useContext(CurrentAlumniAccountContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
     const [nextPage, setNextPage] = useState()
 

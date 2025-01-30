@@ -12,7 +12,6 @@ import { CurrentAccountUserContext } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { CurrentAlumniAccountContext } from "../../App";
 import { getAlumniAccountt } from "../../configs/API/userApi";
-import { useEffect } from "react";
 
 function Login({ navigation: any }) {
     const navigation = useNavigation()
