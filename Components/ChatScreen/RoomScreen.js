@@ -72,19 +72,22 @@ const ScreenRoom = () => {
         const cleanedAvatarUrl = item.second_user.avatar.replace('image/upload/', '');
         const lastLogin = item.second_user.user.last_login;
         const lastSeenMinutesAgo = lastLogin ? moment().diff(moment(lastLogin), 'minutes') : null;
-    
+        
         const isOnline = lastSeenMinutesAgo !== null && lastSeenMinutesAgo < 5;
+    
+        // Sử dụng moment để hiển thị thời gian dưới dạng "1 giờ trước", "1 ngày trước", "1 tháng trước"
         const statusText = isOnline
             ? 'Đang hoạt động'
             : lastSeenMinutesAgo !== null
-            ? `Hoạt động ${lastSeenMinutesAgo} phút trước`
+            ? moment(lastLogin).fromNow()  // Chuyển đổi thời gian theo định dạng "X phút/hours/ngày/tháng trước"
             : 'Chưa hoạt động';
-    //Lưu context room truyền vào mess
-    const navigateToChatScreen = (room) => {
-        setRoom(room);
-        navigation.navigate('ChatScreen')
-    }
     
+        //Lưu context room truyền vào mess
+        const navigateToChatScreen = (room) => {
+            setRoom(room);
+            navigation.navigate('ChatScreen')
+        }
+        
         return (
             <View style={styles.roomItem}>
                 <Image source={{ uri: cleanedAvatarUrl }} style={styles.avatar} />
@@ -104,7 +107,6 @@ const ScreenRoom = () => {
                 </View>
                  {/* Chuyển ChatScreen */}
                 <Text
-                   
                     style={styles.joinChat}
                     onPress={()=> navigateToChatScreen(item)}>
                         Chat
@@ -112,6 +114,7 @@ const ScreenRoom = () => {
             </View>
         );
     };
+    
 
     return (
         <View style={styles.container}>

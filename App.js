@@ -39,7 +39,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState({})
   const [currentAccountUser, setCurrentAccountUser] = useState({})
   const [totalReactionAccount, setTotalReactionAccount] = useState({})
-  const [getRoom, setRoom] = useState({})
+  
+  const [getRoom, setRoom] = useState({ user: {}, messages: [] });
 
 
 

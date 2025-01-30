@@ -1,9 +1,8 @@
-
 import { View, Text, Button, SafeAreaView, Image, TouchableOpacity, Alert } from "react-native";
 import styles from "../../styles/styles";
 import Styles from "./Styles";
 import { TextInput } from "react-native-gesture-handler";
-import { useContext, useState } from "react";
+import { use, useContext, useState } from "react";
 import { getCurrentUser, login } from "../../configs/API/userApi";
 import { CurrentUserContext } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,6 +11,8 @@ import { CurrentAccountUserContext } from "../../App";
 import { useNavigation } from "@react-navigation/native";
 import { CurrentAlumniAccountContext } from "../../App";
 import { getAlumniAccountt } from "../../configs/API/userApi";
+import { useEffect } from "react";
+import Icon from 'react-native-vector-icons/Feather';
 
 function Login({ navigation: any }) {
     const navigation = useNavigation()
@@ -28,7 +29,7 @@ function Login({ navigation: any }) {
         grant_type: 'password'
     })
 
-
+    const [passVisible, setPassVisible] = useState(false)
     const saveToken = async (token) => {
         try {
             await AsyncStorage.setItem('@access_token', token);
@@ -105,8 +106,7 @@ function Login({ navigation: any }) {
                     if (account.account_status === true) {
                         
                         if (account.role === "ALUMNI") {
-                            
-                            //Lay Alumni
+                             //Lay Alumni
                             const alumni = await getAlumniAccountInfo(response.access_token, id);
                             if (alumni.confirm_status === "PENDING") {
                                 Alert.alert("Thông báo", "Tài khoản đang được chờ xét duyệt")
@@ -156,7 +156,6 @@ function Login({ navigation: any }) {
                     <Text style={Styles.titleText}>Đăng Nhập</Text>
                 </View>
 
-
                 <View style={Styles.form}>
                     <View>
                         <Text style={Styles.inputLabel}>Tên Đăng Nhập</Text>
@@ -169,19 +168,22 @@ function Login({ navigation: any }) {
 
                     <View style={{ marginTop: 20 }}>
                         <Text style={Styles.inputLabel}>Mật khẩu</Text>
-                        <TextInput
-                            style={Styles.inputControl}
-                            placeholder="Nhập mật khẩu"
-                            onChangeText={password => setForm({ ...form, password })}
-                        />
+                        <View style={Styles.passwordContainer}>
+                            <TextInput
+                                style={Styles.inputControl}
+                                placeholder="Nhập mật khẩu"
+                                secureTextEntry={!passVisible} // Bật/tắt ẩn mật khẩu
+                                onChangeText={password => setForm({ ...form, password })}
+                            />
+                            <TouchableOpacity onPress={() => setPassVisible(!passVisible)} style={Styles.iconContainer}>
+                                <Icon name={passVisible ? 'eye-off' : 'eye'} size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-
                 </View>
 
                 <View>
-                    <TouchableOpacity activeOpacity={0.8}
-                        onPress={onClick}
-                    >
+                    <TouchableOpacity activeOpacity={0.8} onPress={onClick}>
                         <View style={Styles.button}>
                             <Text style={Styles.textButton}>Đăng Nhập</Text>
                         </View>
@@ -200,4 +202,3 @@ function Login({ navigation: any }) {
 }
 
 export default Login;
-
