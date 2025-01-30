@@ -43,7 +43,7 @@ const Account = ({ navigation }) => {
             });
             console.log("Đăng xuất thành công");
         } catch (error) {
-            
+
             console.error("Lỗi khi đăng xuất: ", error);
         }
     };
@@ -71,7 +71,7 @@ const Account = ({ navigation }) => {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => navigation.navigate('Profile',{thisAccount: currentAccountUser})}>
+                onPress={() => navigation.navigate('Profile', { thisAccount: currentAccountUser })}>
                 <Text style={styles.buttonText}>Trang Cá Nhân</Text>
             </TouchableOpacity>
 
@@ -81,11 +81,20 @@ const Account = ({ navigation }) => {
                 <Text style={styles.buttonText}>Thông tin Cá Nhân</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.navigate('ApprovalScreen')}>
-                <Text style={styles.buttonText}>Xét duyệt tài khoản</Text>
-            </TouchableOpacity>
+            {currentAccountUser && currentAccountUser.role === 'Admin' ? (
+                <>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('ApprovalScreen')}>
+                        <Text style={styles.buttonText}>Xét duyệt tài khoản</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('RegisterLecturer')}>
+                        <Text style={styles.buttonText}>Tạo tài khoản giảng viên</Text>
+                    </TouchableOpacity>
+                </>
+            ) : (<View></View>)}
 
             <TouchableOpacity
                 style={styles.button}

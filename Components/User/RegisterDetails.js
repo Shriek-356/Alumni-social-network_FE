@@ -83,7 +83,6 @@ export default function RegisterDetails() {
 
                     <View style={{ marginTop: 20 }}>
                         <Text style={Styles.inputLabel}>Giới Tính</Text>
-
                         <Picker
                             selectedValue={RegisterInfo.gender}
                             style={Styles.inputControl}

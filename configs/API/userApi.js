@@ -13,7 +13,8 @@ const endpoints = {
     'getUserPosts': (id) => `/accounts/${id}/post/`,
     'searchUsers':(value) => `/users/search_account/?full_name=${value}`,
     'getAlumni' : "/alumni_accounts/",
-    'approvalAlumni' :(id) => `/alumni-accounts/${15}/`
+    'approvalAlumni' :(id) => `/alumni_accounts/${id}/`,
+    'registerLecturer' : "/users/create_lecturer/"
 }
 
 export const fetchUsers = async () =>{
@@ -128,13 +129,33 @@ export const getAlumnis = async(token) =>{
     }
 }
 
-export const approvalAlumnis = async(token,id)=>{
+export const approvalAlumnis = async(token,id,data)=>{
     try{
-        let response = await axiosDAuthApiInstance(token).patch(endpoints.approvalAlumni(id))
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.approvalAlumni(id),data, {
+            headers: {
+                'Content-Type': 'application/json' 
+            }
+        })
         return response.data
     }catch(ex){
         console.log(ex)
         throw(ex)
     }
 }
+
+export const registerLecturerr = async(token,data)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).post(endpoints.registerLecturer,data, {
+            headers: {
+                'Content-Type': 'application/json' 
+            }
+        })
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+
 

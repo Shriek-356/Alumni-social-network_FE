@@ -56,7 +56,9 @@ const ApprovalScreen = () => {
     }
 
     const handleApprove = async (accountId) => {
+        console.log(accountId)
         try {
+            setLoading(true)
             const data ={
                 confirm_status: "Confirmed"
             }
@@ -65,17 +67,24 @@ const ApprovalScreen = () => {
         } catch (error) {
             console.error('Error approving account:', error);
         }
+        finally{
+            setLoading(false)
+        }
     };
 
     const handleReject = async (accountId) => {
         try {
+            setLoading(true)
             const data ={
                 confirm_status: "Rejected"
             }
-            await rejectAccount(token, accountId,data);
+            await approvalAlumnis(token, accountId,data);
             setAccounts(accounts.filter(account => account.account.user.id !== accountId));
         } catch (error) {
             console.error('Error rejecting account:', error);
+        }
+        finally{
+            setLoading(false)
         }
     };
 
@@ -120,7 +129,7 @@ const ApprovalScreen = () => {
                 />
             )}
 
-            {/* Tải thêm bình luận */}
+            {/* Tải thêm Account */}
             <TouchableOpacity style={styles.loadMoreButton} onPress={loadMoreAccounts} >
                 <Text style={styles.loadMoreText}>Tải thêm</Text>
             </TouchableOpacity>
