@@ -67,6 +67,7 @@ const ChatScreen = () => {
             }
         }
     };
+    
 
     const renderMessItem = ({ item }) => {
         const isCurrentUser = item.who_sent?.user?.id === room.first_user.user.id;
