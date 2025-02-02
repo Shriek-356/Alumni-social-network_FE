@@ -62,6 +62,7 @@ export default function Home() {
                     full_name: post.account.full_name
                 }));
                 setPosts(detailsPosts);
+                console.log(detailsPosts)
             } catch (err) {
                 console.log("Error fetch Posts: ", err);
             } finally {
@@ -72,7 +73,6 @@ export default function Home() {
 
     const loadMorePosts = async () => {
         if (nextPage && token) {
-            console.log(nextPage)
             try {
                 let responsee = await axios.get(nextPage, {
                     headers: { Authorization: `Bearer ${token}` },

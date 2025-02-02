@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { getPostCommentss} from '../../configs/API/PostApi';
+import { getPostCommentss } from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
 import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
@@ -9,10 +9,15 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { ScrollView } from 'react-native';
 import { Pressable } from 'react-native';
+import { axiosDAuthApiInstance } from '../../configs/api';
+import { deleteCommentt } from '../../configs/API/PostApi';
+import { ActivityIndicator } from 'react-native';
 
 function RenderPost({ item, onDelete }) {
 
-    const [menuVisible, setMenuVisible] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);//Nay la cua bai viet
+    const [menuVisibleComment, setMenuVisibleComment] = useState(false);//Nay la cua binh luan
+
     const navigation = useNavigation()
     const [reaction, setReaction] = useState();
     const [reactionID, setReactionID] = useState();
@@ -21,9 +26,20 @@ function RenderPost({ item, onDelete }) {
     const [totalReaction, setTotalReaction] = useState();
     const [token, setToken] = useState();
     const [nextPageImage, setNextPageImage] = useState(null)
-    const [imagesPost,setImagesPost] = useState([])
-    const [loading,setLoading] = useState(false)
-    const [selectedImage,setSelectedImage] = useState(null)
+    const [imagesPost, setImagesPost] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [selectedImage, setSelectedImage] = useState(null)
+
+    const [loadingComment,setLoadingComment] = useState(null)
+
+    const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
+    const [editedPost, setEditedPost] = useState(item.post_content || '');
+    const [postContent, setPostContent] = useState("")
+
+    const [loadingEditComment, setLoadingEditComment] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [editedContent, setEditedContent] = useState("");
+
 
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
@@ -32,7 +48,6 @@ function RenderPost({ item, onDelete }) {
     const isOwner = currentAccountUser.user.id === item.account.user.id; //Kiem tra xem bai viet do co phai la cua Account hien tai hay khong
 
     const [newComment, setNewComment] = useState({
-        id: '',
         account: currentAccountUser,
         comment_image_url: '',
         created_date: '',
@@ -41,6 +56,7 @@ function RenderPost({ item, onDelete }) {
         comment_content: '',
         post: item.id
     })
+
 
     //Lay so cam xuc cua 1 bai viet
     useEffect(() => {
@@ -73,15 +89,15 @@ function RenderPost({ item, onDelete }) {
                         },
                     });
 
-                    if(response.data.count>0){
+                    if (response.data.count > 0) {
                         setImagesPost(response.data.results)
                     }
-                    
+
                 }
                 catch (error) {
                     console.log("Error get post images: ", error)
                 }
-                finally{
+                finally {
                     setLoading(false)
                 }
             }
@@ -111,6 +127,83 @@ function RenderPost({ item, onDelete }) {
         }
     }
 
+    const SetMenuVisibleComment = (commentId) => {
+        //Tức là nếu cùng id (đang mở menu) thì gán là null để tắt menu
+        setMenuVisibleComment(menuVisibleComment === commentId ? null : commentId);
+    };
+
+    const startEditingComment = (commentId, content) => {
+        setEditingCommentId(commentId);
+        setEditedContent(content);
+        setMenuVisibleComment(null); // Đóng menu sau khi chọn chỉnh sửa
+    };
+
+
+    const saveEditedComment = async (commentId) => {
+        setLoadingEditComment(true)
+        try {
+            const commentJson = {
+                "comment_content": editedContent
+            }
+            await axiosDAuthApiInstance(token).patch(`/comment/${commentId}/`, commentJson)
+            setComments(comments.map(comment =>
+                comment.id === commentId ? { ...comment, comment_content: editedContent } : comment
+            ));
+            console.log("Thanh cong")
+            setEditingCommentId(null);
+            setEditedContent("");
+        } catch (error) {
+            console.log("Lỗi cập nhật bình luận: ", error);
+        }
+        finally {
+            setLoadingEditComment(false)
+        }
+    };
+
+    const onDeleteComment = async (commentId) => {
+        try {
+
+            await deleteCommentt(token, commentId)
+            console.log('Xoa Thanh Cong')
+            setComments((prevComments) => prevComments.filter(comment => comment.id !== commentId));
+
+        } catch (error) {
+            console.log("Lỗi cập nhật bình luận: ", error);
+        }
+
+    }
+
+
+
+    const startEditingPost = () => {
+        setEditedPost(item.post_content); // Lấy nội dung bài viết hiện tại
+        setEditingPost(true); // Bật chế độ chỉnh sửa
+    };
+
+    const handleUpdatePost = async () => {
+        if (!editedPost.trim()) {
+            alert("Nội dung không được để trống!");
+            return;
+        }
+
+        try {
+            /*const response = await axiosDAuthApiInstance(token).patch(`/post/${item.id}/`, {
+                post_content: editedPost
+            });
+
+            if (response.status === 200) {
+                setPostContent(editedPost); // Cập nhật nội dung bài viết mới
+                setEditingPost(false); // Thoát chế độ chỉnh sửa
+            }*/
+
+            setPostContent(editedPost); // Cập nhật nội dung bài viết mới
+            setEditingPost(false); // Thoát chế độ chỉnh sửa
+        } catch (error) {
+            console.error("Lỗi cập nhật bài viết:", error);
+        }
+    };
+
+
     //Lay token
     useEffect(() => {
         const fetchToken = async () => {
@@ -122,6 +215,7 @@ function RenderPost({ item, onDelete }) {
 
     useEffect(() => {
         const fetchComments = async () => {
+            setLoadingComment(true)
             if (item && token) {
                 try {
                     let dataComments = await getPostCommentss(token, item.id)
@@ -129,6 +223,9 @@ function RenderPost({ item, onDelete }) {
                     setNextPage(dataComments.next)
                 } catch (error) {
                     console.log("Fetch comments error: ", error)
+                }
+                finally {
+                    setLoadingComment(false)
                 }
             }
         }
@@ -182,31 +279,32 @@ function RenderPost({ item, onDelete }) {
 
 
     const addComment = async () => {
-
+        setLoading(true)
         try {
-
             if (newComment.comment_content.trim()) {
-
                 const commentsJson = {
                     comment_content: newComment.comment_content,
-                    account: currentAccountUser.user,
+                    account: currentAccountUser.user.id,
                     post: item.id,
                     comment_image_url: ""
                 }
-                console.log(commentsJson)
                 let respone = await addPostCommentss(token, commentsJson)
-
                 if (respone) {
                     const updateComments = {
                         ...newComment,
+                        id: respone.id,
                         created_date: new Date().toISOString().split('T')[0]
                     }
-                    setComments([...comments, updateComments])
+                    setComments(prevComments => [updateComments, ...prevComments]);
+
                     setNewComment({ ...newComment, comment_content: '' })
                 }
             }
         } catch (error) {
             console.log("Error add comments: ", error)
+        }
+        finally {
+            setLoading(false)
         }
     };
 
@@ -244,14 +342,17 @@ function RenderPost({ item, onDelete }) {
                             <FontAwesome name="ellipsis-v" size={20} color="#333" />
                         </TouchableOpacity>
 
-                        {/* Menu hiện ngay bên dưới */}
                         {menuVisible && (
                             <View style={styles.menuContainer}>
                                 <TouchableOpacity
-                                    onPress={() => {
-                                        console.log('Xóa bài viết');
-                                        onDelete(); // Đảm bảo hàm được gọi
-                                    }}
+                                    onPress={startEditingPost} // Bật chế độ chỉnh sửa đúng cách
+                                    style={styles.menuOption}
+                                >
+                                    <Text style={styles.menuOptionText}>Chỉnh sửa bài viết</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => onDelete()}
                                     style={styles.menuOption}
                                 >
                                     <Text style={styles.menuOptionText}>Xóa bài viết</Text>
@@ -264,7 +365,28 @@ function RenderPost({ item, onDelete }) {
             </View>
 
 
-            <Text style={styles.postContent}>{item.post_content}</Text>
+            {editingPost ? (
+                <View>
+                    <TextInput
+                        value={editedPost}
+                        onChangeText={setEditedPost}
+                        style={styles.input}
+                        multiline
+                    />
+                    <TouchableOpacity onPress={handleUpdatePost} style={styles.saveButton}>
+                        <Text style={styles.saveButtonText}>Lưu</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setEditingPost(false)} style={styles.cancelButton}>
+                        <Text style={styles.cancelButtonText}>Hủy</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <View>
+                    <Text style={styles.postContent}>{item.post_content}</Text>
+                </View>
+            )}
+
+
 
             {loading && <Text>Đang tải hình ảnh...</Text>}
 
@@ -272,7 +394,7 @@ function RenderPost({ item, onDelete }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {imagesPost.length > 0 ? (
                     imagesPost.map((image, index) => (
-                        <TouchableOpacity key={index} onPress={() => {setSelectedImage(processImageURL(image.post_image_url))}}>
+                        <TouchableOpacity key={index} onPress={() => { setSelectedImage(processImageURL(image.post_image_url)) }}>
                             <Image
                                 source={{ uri: processImageURL(image.post_image_url) }}
                                 style={styles.image}
@@ -281,7 +403,7 @@ function RenderPost({ item, onDelete }) {
                         </TouchableOpacity>
                     ))
                 ) : (
-                    <Text>Không có hình ảnh nào.</Text>
+                    <View></View>
                 )}
             </ScrollView>
 
@@ -337,31 +459,73 @@ function RenderPost({ item, onDelete }) {
 
 
             <View style={styles.commentsSection}>
+                {loadingComment && <ActivityIndicator size="large" color="blue" />}
+                {comments.map((comment) => (
+                    <View key={comment.id} style={styles.commentItem}>
+                        <View style={styles.commentHeader}>
+                            <Image
+                                source={{ uri: processImageURL(comment.account.avatar) || 'https://via.placeholder.com/50' }}
+                                style={styles.avatar}
+                            />
+                            <View style={styles.commentTextContainer}>
+                                <Text style={styles.userName} onPress={()=>navigation.navigate('Profile',{thisAccount:currentAccountUser})}>{comment.account.full_name || 'Anonymous'}</Text>
+                                <Text style={styles.commentDate}>{comment.created_date}</Text>                             
+                            </View>
 
-                {comments.length > 0 ? (
-                    comments.map((comment) => (
-                        <View key={comment.id} style={styles.commentItem}>
-                            <View style={styles.commentHeader}>
-                                <Image
-                                    source={{
-                                        uri: processImageURL(comment.account.avatar) || 'https://via.placeholder.com/50',
-                                    }}
-                                    style={styles.avatar}
+                            {/* Nút ba chấm cho mỗi bình luận */}
+                            {currentAccountUser.user.id === comment.account.user.id && (
+                                <View style={{ position: 'relative' }}>
+                                    <TouchableOpacity
+                                        onPress={() => SetMenuVisibleComment(comment.id)}
+                                        style={styles.menuButton}
+                                    >
+                                        <FontAwesome name="ellipsis-v" size={20} color="#333" />
+                                    </TouchableOpacity>
+
+                                    {/* Menu hiển thị nếu menuVisibleComment === comment.id */}
+                                    {menuVisibleComment === comment.id && (
+                                        <View style={styles.menuContainer}>
+                                            <TouchableOpacity
+                                                onPress={() => startEditingComment(comment.id, comment.comment_content)}
+                                                style={styles.menuOption}
+                                            >
+                                                <Text style={styles.menuOptionText}>Chỉnh sửa</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                onPress={() => onDeleteComment(comment.id)}
+                                                style={styles.menuOption}
+                                            >
+                                                <Text style={styles.menuOptionText}>Xóa</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Nếu đang chỉnh sửa thì hiển thị input, nếu không thì hiển thị nội dung */}
+                        {editingCommentId === comment.id ? (
+                            <View >
+                                <TextInput
+                                    style={styles.commentInput}
+                                    value={editedContent}
+                                    onChangeText={setEditedContent}
                                 />
-                                <View style={styles.commentTextContainer}>
-                                    <View>
-                                        <Text style={styles.userName}>{comment.account.full_name || 'Anonymous'}</Text>
-                                        <Text style={styles.commentDate}>{comment.created_date}</Text>
-                                    </View>
+                                <View style={styles.buttonContainer}>
+                                    <TouchableOpacity onPress={() => saveEditedComment(comment.id)} style={styles.saveButton} disabled={loadingEditComment}>
+                                        {loadingEditComment ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveButtonText}>Lưu</Text>}
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => setEditingCommentId(null)} style={styles.cancelButton}>
+                                        <Text style={styles.cancelButtonText}>Hủy</Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
+                        ) : (
                             <Text style={styles.commentText}>{comment.comment_content}</Text>
-                        </View>
-                    ))
-                ) : (
-                    <Text style={styles.noComments}>Chưa có bình luận nào.</Text>
-                )}
-
+                        )}
+                    </View>
+                ))}
 
                 {/* Tải thêm bình luận */}
                 <TouchableOpacity style={styles.loadMoreButton} onPress={loadMoreComments} >
@@ -378,8 +542,12 @@ function RenderPost({ item, onDelete }) {
                         value={newComment.comment_content}
                         onChangeText={comment_content => setNewComment({ ...newComment, comment_content })}
                     />
-                    <TouchableOpacity style={styles.commentButton} onPress={addComment}>
-                        <Text style={styles.commentButtonText}>Gửi</Text>
+                    <TouchableOpacity style={styles.commentButton} onPress={addComment} disabled={loading}>
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.commentButtonText}>Gửi</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -516,7 +684,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     menuButton: {
-        paddingHorizontal: 100,
+        marginTop: 10,
+        paddingHorizontal: 60,
     },
     menuContainer: {
         position: 'absolute',
@@ -578,6 +747,45 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
     },
+
+    commentActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 5,
+    },
+    commentActionText: {
+        fontSize: 14,
+        color: '#007bff',
+        fontWeight: '600',
+        marginRight: 10
+    },
+    buttonContainer: {
+        flexDirection: "row",
+        marginLeft: 10, 
+    },
+    saveButton: {
+        backgroundColor: "#33CC33",
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        marginRight: 10, // Khoảng cách giữa hai nút
+    },
+    saveButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 14,
+    },
+    cancelButton: {
+        backgroundColor: "#FF3300",
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+    },
+    cancelButtonText: {
+        color: "#FFFFFF",
+        fontWeight: "bold",
+        fontSize: 14,
+    }
 });
 
 export default RenderPost;

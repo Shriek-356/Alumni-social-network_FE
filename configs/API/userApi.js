@@ -14,7 +14,8 @@ const endpoints = {
     'searchUsers':(value) => `/users/search_account/?full_name=${value}`,
     'getAlumni' : "/alumni_accounts/",
     'approvalAlumni' :(id) => `/alumni_accounts/${id}/`,
-    'registerLecturer' : "/users/create_lecturer/"
+    'registerLecturer' : "/users/create_lecturer/",
+    
 }
 
 export const fetchUsers = async () =>{
