@@ -38,7 +38,7 @@ const Header =  () => {
 
 const styles = StyleSheet.create({
     LogoStyle: {
-        height:50,
+        height:40,
         width:100, 
         resizeMode: 'contain'
 
@@ -53,7 +53,9 @@ const styles = StyleSheet.create({
     },
     headerContainer:{
         backgroundColor: ' #FFFFFF',
-        padding:16,
+        paddingTop:10,
+        paddingLeft:10,
+        paddingRight:15,
         marginTop:30,
         flexDirection:'row',
         justifyContent:'space-between',

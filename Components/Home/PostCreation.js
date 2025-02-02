@@ -7,7 +7,8 @@ import { getToken } from "../../configs/api";
 import { useEffect } from "react";
 import { deletePosts } from "../../configs/API/PostApi";
 import { useNavigation } from "@react-navigation/native";
-
+import { CurrentAccountUserContext } from "../../App";
+import { useContext } from "react";
 const CreatePost = () => {
 
     const navigation = useNavigation()
@@ -15,7 +16,7 @@ const CreatePost = () => {
     const [images, setImages] = useState([])  // Giữ images như một mảng
     const [loading, setLoading] = useState(false)
     const [token, setToken] = useState();
-
+     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     //lay token
     useEffect(() => {
         const fetchToken = async () => {
@@ -133,6 +134,20 @@ const CreatePost = () => {
             <TouchableOpacity style={[styles.button, { marginTop: 20 }]} onPress={uploadImages}>
                 <Text style={styles.buttonText}>Đăng bài</Text>
             </TouchableOpacity>
+
+
+            {currentAccountUser && currentAccountUser.role === 'Admin' ? (
+            <TouchableOpacity style={[styles.button, { marginTop: 20 }]} onPress={() => navigation.navigate('PostSurvey')}>
+                <Text style={styles.buttonText}>Tạo bài viết khảo sát</Text>
+            </TouchableOpacity>
+            ):(<View></View>)}
+
+            {currentAccountUser && currentAccountUser.role === 'Admin' ? (
+            <TouchableOpacity style={[styles.button, { marginTop: 20 }]} onPress={() => navigation.navigate('PostInvited')}>
+                <Text style={styles.buttonText}>Tạo bài viết lời mời</Text>
+            </TouchableOpacity>
+            ):(<View></View>)}
+
         </View>
     );
 }

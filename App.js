@@ -13,7 +13,10 @@ import ScreenRoom from './Components/ChatScreen/RoomScreen';
 import SearchScreen from './Components/ChatScreen/SearchScreen';
 import ApprovalScreen from './Components/Home/ApprovalScreen';
 import RegisterLecturer from './Components/User/RegisterLecturer';
+import PostSurVey from './Components/Post/PostSurvey';
+
 const Stack = createStackNavigator();
+
 
 export const RegisterInfoContext = createContext()
 export const CurrentUserContext = createContext()
@@ -21,7 +24,8 @@ export const CurrentAccountUserContext = createContext()
 export const CurrentAlumniAccountContext = createContext()
 export const MyUserContext = createContext();
 export const TotalReactionAccountContext = createContext()
-export const RoomContext = createContext()
+export const RoomContext = createContext();
+export const PostSurveyContext = createContext()
 export default function App() {
 
   const [RegisterInfo, setRegisterInfo] = useState({
@@ -34,6 +38,15 @@ export default function App() {
     last_name: '',
     gender: '',
     alumni_account_code: ''
+  });
+  const [postSurveyInfo, setPostSurveyInfo] = useState({
+    post_survey_title: '',
+    start_time:'',
+    end_time:'',
+    post_content:'',
+    is_closed:''
+
+
   });
 
   const [currentAlumniAccount, setCurrentAlumniAccount] = useState({})
@@ -50,8 +63,11 @@ export default function App() {
       <TotalReactionAccountContext.Provider value={[totalReactionAccount, setTotalReactionAccount]}>
         <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
+          <PostSurveyContext.Provider value={[postSurveyInfo , setPostSurveyInfo]}>
+
             <RoomContext.Provider value={[getRoom, setRoom]}>
               <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
+
                 <NavigationContainer>
                   <Stack.Navigator initialRouteName='Login'>
                     <Stack.Screen name="Login" component={Login}
@@ -86,10 +102,14 @@ export default function App() {
                     <Stack.Screen name="RegisterLecturer" component={RegisterLecturer}
                       options={{ headerShown: false }}
                     />
+                    <Stack.Screen name="PostSurvey" component={PostSurVey}
+                      options={{ headerShown: false }}
+                    />
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>
             </RoomContext.Provider>
+            </PostSurveyContext.Provider>
           </CurrentUserContext.Provider>
         </CurrentAccountUserContext.Provider>
       </TotalReactionAccountContext.Provider>
