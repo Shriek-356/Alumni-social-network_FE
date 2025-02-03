@@ -11,10 +11,12 @@ import {
   ScrollView,
 } from "react-native";
 import { getToken } from "../../configs/api";
-import { CurrentAccountUserContext } from "../../App";
+import {  CurrentUserContext } from "../../App";
 import { addPostSurvey, addQuestionPostSurvey } from "../../configs/API/PostSurveyApi";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { PostSurveyContext } from "../../App";
+import { Picker } from "@react-native-picker/picker";
+import { Switch } from "react-native-gesture-handler";
 
 const PostSurvey = () => {
   const [postSurveys, setPostSurveys] = useState([]);
@@ -23,12 +25,15 @@ const PostSurvey = () => {
   const [newSurveyContent, setNewSurveyContent] = useState("");
   const [token, setToken] = useState();
   const [loading, setLoading] = useState(false);
+  const [isRequired, setIsRequired] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [newSurveyQuestion, setNewSurveyQuestion] = useState("");
   const [questionList, setQuestionList] = useState([]);
+  const [selectedQuestionType , setSelectedQuestionType] = useState("Chương trình đào tạo")
   const navigation = useNavigation();
-  const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext);
+  const [currenttUser] = useContext(CurrentUserContext);
+
   const [postServeyInfo, setPostSurveyInfo] = useContext(PostSurveyContext);
 
   // Các state riêng cho picker của startTime
@@ -50,13 +55,13 @@ const PostSurvey = () => {
   }, []);
 
   const handleAddPostSurvey = async () => {
-    if (newSurveyTitle && newSurveyContent && startTime && endTime && currentAccountUser) {
+    if (newSurveyTitle && newSurveyContent && startTime && endTime && currenttUser) {
       const surveyData = {
         post_survey_title: newSurveyTitle,
         start_time: startTime,
         end_time: endTime,
         post_content: newSurveyContent,
-        account_id: currentAccountUser.id,
+        account_id: currenttUser.id,
       };
       try {
         setLoading(true);
@@ -93,12 +98,13 @@ const PostSurvey = () => {
   const handleAddQuestion = () => {
     if (newSurveyQuestion) {
       const newQuestion = {
-        content: newSurveyQuestion,
-        isRequired: true,
-        type: "Employment Status",
+        question_content: newSurveyQuestion,
+        is_required: isRequired ?"True":"False",
+        survey_question_type: selectedQuestionType,
       };
       setQuestionList([...questionList, newQuestion]);
       setNewSurveyQuestion("");
+      setIsRequired(false);
     }
   };
 
@@ -268,6 +274,25 @@ const PostSurvey = () => {
         placeholder="Nhập câu hỏi khảo sát"
         placeholderTextColor="#999"
       />
+      {/* {Picker chọn loại câu hỏi} */}
+      <Picker
+      selectedValue={selectedQuestionType}
+      onValueChange={(itemValue) => setSelectedQuestionType(itemValue)}
+        style= {styles.picker}
+      
+      >
+        <Picker.Item label="Chương trình đào tạo" value="Chương trình đào tạo" />
+        <Picker.Item label="Nhu cầu tuyển dụng" value="Nhu cầu tuyển dụng" />
+        <Picker.Item label="Thu nhập cựu sinh viên" value="Thu nhập cựu sinh viên" />
+        <Picker.Item label="Tình hình việc làm" value="Tình hình việc làm" />
+      </Picker>
+
+      {/* {Ô chuyển để bắt buộc trả lời hay không} */}
+      <View style={styles.switchContainer}>
+        <Text style={styles.switchLabel}>Bắt buộc trả lời:</Text>
+        <Switch value={isRequired}
+        onValueChange={setIsRequired}/>
+      </View>
       <TouchableOpacity style={styles.addButton} onPress={handleAddQuestion}>
         <Text style={styles.addButtonText}>Thêm câu hỏi khảo sát vào bài viết</Text>
       </TouchableOpacity>
@@ -278,7 +303,9 @@ const PostSurvey = () => {
           <Text style={styles.questionListTitle}>Câu hỏi đã thêm:</Text>
           {questionList.map((question, index) => (
             <View key={index} style={styles.questionItem}>
-              <Text style={styles.questionText}>{question.content}</Text>
+              <Text style={styles.questionText}>
+            {question.question_content} - {question.survey_question_type} - {question.is_required}
+          </Text>
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteQuestion(index)}
@@ -423,6 +450,30 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  picker: {
+    backgroundColor: "#fff",
+    marginBottom: 15,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: "#333",
+    marginRight: 10,
+  },
+  questionItem: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  questionText: {
+    fontSize: 15,
+    color: "#555",
   },
 });
 
