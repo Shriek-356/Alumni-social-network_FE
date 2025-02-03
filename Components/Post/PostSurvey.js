@@ -83,7 +83,7 @@ const PostSurvey = () => {
         setEndTime("");
         setNewSurveyQuestion("");
         setQuestionList([]);
-        Alert.alert("Thông báo", "Khảo sát đã được thêm thành công!");
+        
         navigation.navigate("AddQuestionScreen")
 
       } catch (error) {
