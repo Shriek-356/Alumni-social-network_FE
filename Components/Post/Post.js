@@ -15,6 +15,11 @@ import { ActivityIndicator } from 'react-native';
 
 function RenderPost({ item, onDelete }) {
 
+//Sắp xếp câu hỏi trước khi render
+    const sortedSurveyQuestions = item.post_survey?.survey_questions
+    ? [...item.post_survey.survey_questions].sort((a, b) => a.question_order - b.question_order)
+    : [];
+
     const [menuVisible, setMenuVisible] = useState(false);//Nay la cua bai viet
     const [menuVisibleComment, setMenuVisibleComment] = useState(false);//Nay la cua binh luan
 
@@ -381,8 +386,54 @@ function RenderPost({ item, onDelete }) {
                     </TouchableOpacity>
                 </View>
             ) : (
+                // Đoạn xử lý khác biệt post_survey
                 <View>
                     <Text style={styles.postContent}>{item.post_content}</Text>
+                    {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
+                    {item.post_survey && (
+                <View>
+                    <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
+                    {sortedSurveyQuestions.map((question) => (
+    <View key={question.id} style={styles.questionContainer}>
+        {/* Hiển thị câu hỏi */}
+        <Text style={styles.surveyQuestion}>
+            {question.question_order}. {question.question_content}
+        </Text>
+
+        {/* Hiển thị danh sách câu trả lời */}
+        {question.survey_answers && question.survey_answers.length > 0 ? (
+            question.survey_answers.map((answer) => {
+                // Tìm người trả lời tương ứng
+                const respondent = item.post_survey.survey_responses.find(
+                    (response) => response.id === answer.survey_response
+                );
+
+                return respondent ? (
+                    <View key={answer.id} style={styles.answerWrapper}>
+                        {/* Thông tin người trả lời */}
+                        <View style={styles.userContainer}>
+                            <Image
+                                source={{ uri: processImageURL(respondent.account.avatar) }}
+                                style={styles.userAvatar}
+                            />
+                            <Text style={styles.userName}>{respondent.account.full_name}</Text>
+                        </View>
+
+                        {/* Nội dung câu trả lời */}
+                        <View style={styles.answerBox}>
+                            <Text style={styles.answerText}>{answer.answer_value}</Text>
+                        </View>
+                    </View>
+                ) : null;
+            })
+        ) : (
+            <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
+        )}
+    </View>
+))}
+
+                </View>
+            )}
                 </View>
             )}
 
@@ -785,7 +836,97 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontWeight: "bold",
         fontSize: 14,
-    }
+    },
+    surveyContainer: {
+        backgroundColor: '#f9f9f9',
+        padding: 15,
+        borderRadius: 10,
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    
+    surveyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 5,
+        textAlign: 'center',
+    },
+    
+    surveyTime: {
+        fontSize: 14,
+        color: '#d9534f',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    
+    questionContainer: {
+        marginBottom: 15,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    
+    surveyQuestion: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    
+    answerWrapper: {
+        marginTop: 10,
+        paddingHorizontal: 10,
+    },
+    
+    userContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    
+    userAvatar: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        marginRight: 10,
+    },
+    
+    userName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#007bff',
+    },
+    
+    answerBox: {
+        backgroundColor: '#e9ecef',
+        padding: 10,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        maxWidth: '80%',
+    },
+    
+    answerText: {
+        fontSize: 14,
+        color: '#333',
+    },
+    
+    noAnswerText: {
+        fontSize: 14,
+        fontStyle: 'italic',
+        color: '#888',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+    
+    
 });
 
 export default RenderPost;

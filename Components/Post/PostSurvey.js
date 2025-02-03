@@ -34,7 +34,8 @@ const PostSurvey = () => {
   const navigation = useNavigation();
   const [currenttUser] = useContext(CurrentUserContext);
 
-  const [postServeyInfo, setPostSurveyInfo] = useContext(PostSurveyContext);
+  const [postId, setPostId] = useContext(PostSurveyContext);
+
 
   // Các state riêng cho picker của startTime
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -66,16 +67,15 @@ const PostSurvey = () => {
       try {
         setLoading(true);
         const response = await addPostSurvey(token, surveyData);
-        const newPostSurveyId = response.post.id;
+        const newPostSurveyId = response.post || response.id
+        console.log("Lưu post_id vào context:", newPostSurveyId);
+        setPostId(newPostSurveyId); // Lưu vào Context
+        if (!newPostSurveyId) {
+          Alert.alert("Lỗi", "Không thể lấy post_id từ API!");
+          return;
+        }
 
-        questionList.forEach(async (question) => {
-          const surveyQuestionData = {
-            question_content: question.content,
-            is_required: question.isRequired,
-            survey_question_type: question.type,
-          };
-          await addQuestionPostSurvey(token, surveyQuestionData, newPostSurveyId);
-        });
+        
 
         setNewSurveyTitle("");
         setNewSurveyContent("");
@@ -84,6 +84,8 @@ const PostSurvey = () => {
         setNewSurveyQuestion("");
         setQuestionList([]);
         Alert.alert("Thông báo", "Khảo sát đã được thêm thành công!");
+        navigation.navigate("AddQuestionScreen")
+
       } catch (error) {
         setError("Lỗi khi thêm khảo sát");
         console.log(error);
@@ -95,23 +97,6 @@ const PostSurvey = () => {
     }
   };
 
-  const handleAddQuestion = () => {
-    if (newSurveyQuestion) {
-      const newQuestion = {
-        question_content: newSurveyQuestion,
-        is_required: isRequired ?"True":"False",
-        survey_question_type: selectedQuestionType,
-      };
-      setQuestionList([...questionList, newQuestion]);
-      setNewSurveyQuestion("");
-      setIsRequired(false);
-    }
-  };
-
-  // Hàm xóa câu hỏi theo index
-  const handleDeleteQuestion = (index) => {
-    setQuestionList(questionList.filter((_, i) => i !== index));
-  };
 
   // Xử lý cho startTime
   const onChangeStartDate = (event, selectedDate) => {
@@ -265,61 +250,15 @@ const PostSurvey = () => {
           />
         )}
       </View>
-
-      {/* Input thêm câu hỏi khảo sát */}
-      <TextInput
-        style={styles.input}
-        value={newSurveyQuestion}
-        onChangeText={setNewSurveyQuestion}
-        placeholder="Nhập câu hỏi khảo sát"
-        placeholderTextColor="#999"
-      />
-      {/* {Picker chọn loại câu hỏi} */}
-      <Picker
-      selectedValue={selectedQuestionType}
-      onValueChange={(itemValue) => setSelectedQuestionType(itemValue)}
-        style= {styles.picker}
-      
-      >
-        <Picker.Item label="Chương trình đào tạo" value="Chương trình đào tạo" />
-        <Picker.Item label="Nhu cầu tuyển dụng" value="Nhu cầu tuyển dụng" />
-        <Picker.Item label="Thu nhập cựu sinh viên" value="Thu nhập cựu sinh viên" />
-        <Picker.Item label="Tình hình việc làm" value="Tình hình việc làm" />
-      </Picker>
-
-      {/* {Ô chuyển để bắt buộc trả lời hay không} */}
-      <View style={styles.switchContainer}>
-        <Text style={styles.switchLabel}>Bắt buộc trả lời:</Text>
-        <Switch value={isRequired}
-        onValueChange={setIsRequired}/>
-      </View>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddQuestion}>
-        <Text style={styles.addButtonText}>Thêm câu hỏi khảo sát vào bài viết</Text>
-      </TouchableOpacity>
-
-      {/* Hiển thị danh sách câu hỏi đã thêm (cho phép cuộn nếu danh sách quá dài) */}
-      {questionList.length > 0 && (
-        <ScrollView style={styles.questionListContainer}>
-          <Text style={styles.questionListTitle}>Câu hỏi đã thêm:</Text>
-          {questionList.map((question, index) => (
-            <View key={index} style={styles.questionItem}>
-              <Text style={styles.questionText}>
-            {question.question_content} - {question.survey_question_type} - {question.is_required}
-          </Text>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteQuestion(index)}
-              >
-                <Text style={styles.deleteButtonText}>Xóa</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleAddPostSurvey}>
-        <Text style={styles.submitButtonText}>Thêm Bài Viết</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.submitButton}
+  onPress={() => {
+    handleAddPostSurvey(); // Gọi hàm thêm khảo sát
+    navigation.navigate("AddQuestionScreen"); // Chuyển sang màn hình câu hỏi
+  }}
+>
+  <Text style={styles.submitButtonText}>Tiếp tục</Text>
+</TouchableOpacity>
     </View>
   );
 };

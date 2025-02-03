@@ -30,9 +30,9 @@ export const addPostSurvey = async(token , dataPostSurvey) => {
         throw (ex)
     }
 }
-export const addQuestionPostSurvey = async(token , dataQuesPostSurvey) => {
+export const addQuestionPostSurvey = async(token ,post_id, dataQuesPostSurvey) => {
     try{
-        let response = await axiosDAuthApiInstance(token).post(endpoints.addQuestionPostSurvey,dataQuesPostSurvey)
+        let response = await axiosDAuthApiInstance(token).post(endpoints.addQuestionPostSurvey(post_id),dataQuesPostSurvey)
         return response.data
     } catch (ex) {
         console.log(ex)
