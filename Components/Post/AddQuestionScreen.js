@@ -28,7 +28,7 @@ const AddQuestionScreen = () => {
     fetchToken();
   }, []);
 
-  // 🟢 Thêm câu hỏi vào danh sách (chưa gửi API)
+  //  Thêm câu hỏi vào danh sách (chưa gửi API)
   const handleAddQuestionToList = () => {
     if (!questionContent.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập nội dung câu hỏi!");
@@ -46,12 +46,12 @@ const AddQuestionScreen = () => {
     setIsRequired(false);
   };
 
-  // 🔴 Xóa câu hỏi khỏi danh sách
+  //  Xóa câu hỏi khỏi danh sách
   const handleDeleteQuestion = (index) => {
     setQuestionList(questionList.filter((_, i) => i !== index));
   };
 
-  // 🟠 Gửi danh sách câu hỏi lên server
+  //  Gửi danh sách câu hỏi lên server
   const handleSubmitQuestions = async () => {
     if (questionList.length === 0) {
       Alert.alert("Lỗi", "Chưa có câu hỏi nào được thêm!");
@@ -134,9 +134,18 @@ const AddQuestionScreen = () => {
       )}
 
       {/* Nút gửi câu hỏi lên server */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmitQuestions} disabled={loading}>
-        <Text style={styles.submitButtonText}>{loading ? "Đang gửi..." : "Lưu Câu Hỏi"}</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+    style={styles.submitButton}
+    onPress={async () => {
+        setLoading(true);  // Hiển thị "Đang gửi..."
+        await handleSubmitQuestions();  // Chờ lưu xong
+        setLoading(false);  // Tắt trạng thái loading
+        navigation.navigate("AllView");  // Chuyển trang sau khi lưu xong
+    }}
+    disabled={loading}
+>
+    <Text style={styles.submitButtonText}>{loading ? "Đang gửi..." : "Lưu Câu Hỏi"}</Text>
+</TouchableOpacity>
       
     </ScrollView>
   );
@@ -146,7 +155,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eef2f9",
-    padding: 20,
+  
+    paddingTop:50,
+    paddingLeft:20,
+    paddingRight:20,
+    paddingBottom:20,
   },
   header: {
     fontSize: 24,

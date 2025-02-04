@@ -7,7 +7,7 @@ const endpoints = {
     'updatePostSurvey':(post_id) => `/post_survey/${post_id}/`,
     'updateSurveyQuestion':(post_id) => `/survey_question/${post_id}/`,
     'deletePostSurvey': (post_id) => `/post_survey/${post_id}/`,
-    'submitSurveyAnswer': '/survey_answer',
+    'submitSurveyAnswer': '/survey_answer/',
     'checkSurveyCompleted':(post_id) => `/post_survey/${post_id}/check_survey_completed/`,
     'addSurveyResponse' : '/survey_response/',
     'getSurveyAnswers': '/survey-answer/',
@@ -99,7 +99,7 @@ export const checkSurveyCompleted = async(token,post_id,accountId)=> {
 
 export const addSurveyResponse = async(token,responseData) =>{
     try{
-        let reponse = await axiosDAuthApiInstance(token).post(endpoints.addPostSurvey,responseData)
+        let reponse = await axiosDAuthApiInstance(token).post(endpoints.addSurveyResponse,responseData)
         return reponse.data
     }
     catch (ex) {
