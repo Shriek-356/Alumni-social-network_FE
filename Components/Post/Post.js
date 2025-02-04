@@ -12,11 +12,7 @@ import { Pressable } from 'react-native';
 import { axiosDAuthApiInstance } from '../../configs/api';
 import { deleteCommentt } from '../../configs/API/PostApi';
 import { ActivityIndicator } from 'react-native';
-<<<<<<< HEAD
-import { updatePostt } from '../../configs/API/PostApi';
-=======
 import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSurveyApi';
->>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
 
 function RenderPost({ item, onDelete }) {
 
@@ -39,20 +35,18 @@ function RenderPost({ item, onDelete }) {
     const [nextPageImage, setNextPageImage] = useState(null)
     const [imagesPost, setImagesPost] = useState([])
     const [loading, setLoading] = useState(false)
-    
     const [selectedImage, setSelectedImage] = useState(null)
     const [surveyQuestions, setSurveyQuestions] = useState(item.post_survey?.survey_questions || []);
 
+    const [loadingComment,setLoadingComment] = useState(null)
 
     const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
     const [editedPost, setEditedPost] = useState(item.post_content || '');
-    const [postContent, setPostContent] = useState(item.post_content)
+    const [postContent, setPostContent] = useState("")
 
     const [loadingEditComment, setLoadingEditComment] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editedContent, setEditedContent] = useState("");
-    const [loadingComment, setLoadingComment] = useState(null)
-    const [isLocked, setIsLocked] = useState(item.comment_lock)
 
 
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
@@ -164,6 +158,7 @@ function RenderPost({ item, onDelete }) {
             setComments(comments.map(comment =>
                 comment.id === commentId ? { ...comment, comment_content: editedContent } : comment
             ));
+            console.log("Thanh cong")
             setEditingCommentId(null);
             setEditedContent("");
         } catch (error) {
@@ -176,26 +171,15 @@ function RenderPost({ item, onDelete }) {
 
     const onDeleteComment = async (commentId) => {
         try {
+
             await deleteCommentt(token, commentId)
             console.log('Xoa Thanh Cong')
             setComments((prevComments) => prevComments.filter(comment => comment.id !== commentId));
+
         } catch (error) {
             console.log("Lỗi cập nhật bình luận: ", error);
         }
-    }
 
-    const onCommentLocked = async () => {
-        if (token) {
-            try {
-                const data = {
-                    comment_lock: !isLocked
-                }
-                await updatePostt(token, item.id, data)
-                setIsLocked(!isLocked);
-            } catch (error) {
-                console.log("Lỗi khóa bình luận: ", error)
-            }
-        }
     }
 
 
@@ -210,18 +194,21 @@ function RenderPost({ item, onDelete }) {
             alert("Nội dung không được để trống!");
             return;
         }
-        if (token) {
-            try {
-                const data = {
-                    post_content: editedPost.trim()
-                }
-                await updatePostt(token, item.id, data)
-                setPostContent(editedPost.trim()); // Cập nhật nội dung bài viết mới
+
+        try {
+            /*const response = await axiosDAuthApiInstance(token).patch(`/post/${item.id}/`, {
+                post_content: editedPost
+            });
+
+            if (response.status === 200) {
+                setPostContent(editedPost); // Cập nhật nội dung bài viết mới
                 setEditingPost(false); // Thoát chế độ chỉnh sửa
-                console.log("Cap nhat bai viet thanh cong")
-            } catch (error) {
-                console.error("Lỗi cập nhật bài viết:", error);
-            }
+            }*/
+
+            setPostContent(editedPost); // Cập nhật nội dung bài viết mới
+            setEditingPost(false); // Thoát chế độ chỉnh sửa
+        } catch (error) {
+            console.error("Lỗi cập nhật bài viết:", error);
         }
     };
 
@@ -428,7 +415,7 @@ const handleSubmitAnswer = async (questionId) => {
                     <View style={{ position: 'relative' }}>
                         <TouchableOpacity
                             onPress={() => setMenuVisible(!menuVisible)}
-                            style={styles.menuButton1}
+                            style={styles.menuButton}
                         >
                             <FontAwesome name="ellipsis-v" size={20} color="#333" />
                         </TouchableOpacity>
@@ -443,20 +430,11 @@ const handleSubmitAnswer = async (questionId) => {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => onCommentLocked()}
-                                    style={styles.menuOption}
-                                >
-                                    {isLocked ? (<Text style={styles.menuOptionText}>Mở bình luận</Text>) : (<Text style={styles.menuOptionText}>Khóa bình luận</Text>)}
-
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
                                     onPress={() => onDelete()}
                                     style={styles.menuOption}
                                 >
                                     <Text style={styles.menuOptionText}>Xóa bài viết</Text>
                                 </TouchableOpacity>
-
                             </View>
                         )}
                     </View>
@@ -483,9 +461,6 @@ const handleSubmitAnswer = async (questionId) => {
             ) : (
                 // Đoạn xử lý khác biệt post_survey
                 <View>
-<<<<<<< HEAD
-                    <Text style={styles.postContent}>{postContent}</Text>
-=======
                     <Text style={styles.postContent}>{item.post_content}</Text>
                     {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
                     {item.post_survey && (
@@ -543,7 +518,6 @@ const handleSubmitAnswer = async (questionId) => {
 
                 </View>
             )}
->>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
                 </View>
             )}
 
@@ -629,8 +603,8 @@ const handleSubmitAnswer = async (questionId) => {
                                 style={styles.avatar}
                             />
                             <View style={styles.commentTextContainer}>
-                                <Text style={styles.userName} onPress={() => navigation.navigate('Profile', { thisAccount: currentAccountUser })}>{comment.account.full_name || 'Anonymous'}</Text>
-                                <Text style={styles.commentDate}>{comment.created_date}</Text>
+                                <Text style={styles.userName} onPress={()=>navigation.navigate('Profile',{thisAccount:currentAccountUser})}>{comment.account.full_name || 'Anonymous'}</Text>
+                                <Text style={styles.commentDate}>{comment.created_date}</Text>                             
                             </View>
 
                             {/* Nút ba chấm cho mỗi bình luận */}
@@ -695,7 +669,8 @@ const handleSubmitAnswer = async (questionId) => {
 
 
                 {/*Thêm bình luận*/}
-                {!isLocked ? (<View style={styles.commentInputContainer}>
+
+                <View style={styles.commentInputContainer}>
                     <TextInput
                         style={styles.commentInput}
                         placeholder="Nhập bình luận..."
@@ -709,12 +684,7 @@ const handleSubmitAnswer = async (questionId) => {
                             <Text style={styles.commentButtonText}>Gửi</Text>
                         )}
                     </TouchableOpacity>
-                </View>) : (
-                    <View style={styles.lockedCommentContainer}>    
-                        <Text style={styles.lockedCommentText}>Đã khóa bình luận</Text>
-                    </View>
-                )}
-
+                </View>
 
             </View>
         </View>
@@ -848,10 +818,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-    menuButton1: {
-        marginTop: 5,
-        paddingHorizontal: 100,
-    },
     menuButton: {
         marginTop: 10,
         paddingHorizontal: 60,
@@ -862,7 +828,7 @@ const styles = StyleSheet.create({
         right: 0,
         backgroundColor: 'white',
         borderRadius: 5,
-        padding: 5,
+        padding: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
@@ -875,7 +841,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     menuOptionText: {
-        fontSize: 15,
+        fontSize: 16,
         color: '#333',
     },
     image: {
@@ -930,7 +896,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: "row",
-        marginLeft: 10,
+        marginLeft: 10, 
     },
     saveButton: {
         backgroundColor: "#33CC33",
@@ -955,23 +921,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 14,
     },
-<<<<<<< HEAD
-    lockedCommentContainer: {
-        backgroundColor: '#f8d7da', 
-        borderRadius: 8,             
-        padding: 10,                 
-        marginTop: 10,              
-        alignItems: 'center',        
-        justifyContent: 'center',   
-    },
-    lockedCommentText: {
-        color: '#721c24',           
-        fontSize: 16,                
-        fontWeight: 'bold', 
-        fontStyle:'italic',         
-        textAlign: 'center',      
-    }
-=======
     surveyContainer: {
         backgroundColor: '#f9f9f9',
         padding: 15,
@@ -1083,7 +1032,6 @@ const styles = StyleSheet.create({
     },
     
     
->>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
 });
 
 export default RenderPost;
