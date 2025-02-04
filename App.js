@@ -62,7 +62,6 @@ export default function App() {
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
           <PostSurveyContext.Provider value={[postId, setPostId ]}>
 
-          <PostSurveyContext.Provider value={[postSurveyInfo , setPostSurveyInfo]}>
             <RoomContext.Provider value={[getRoom, setRoom]}>
               <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
 
@@ -108,8 +107,8 @@ export default function App() {
                     <Stack.Screen name ="PostInvited" component={PostInvited}
                       options ={{headerShown:false}}
                     />
-                     <Stack.Screen name="UserInfoScreen" component={UserInfoScreen}
-                      options={{ headerShown: false }}
+                    <Stack.Screen name ="UserInfoScreen" component={UserInfoScreen}
+                      options ={{headerShown:false}}
                     />
                   </Stack.Navigator>
                 </NavigationContainer>

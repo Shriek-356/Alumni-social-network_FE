@@ -16,7 +16,7 @@ import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSur
 
 function RenderPost({ item, onDelete }) {
 
-//Sắp xếp câu hỏi trước khi render
+    //Sắp xếp câu hỏi trước khi render
     const sortedSurveyQuestions = item.post_survey?.survey_questions
         ? [...item.post_survey.survey_questions].sort((a, b) => a.question_order - b.question_order)
         : [];
@@ -31,6 +31,11 @@ function RenderPost({ item, onDelete }) {
     const [comments, setComments] = useState([]);
     const [nextPage, setNextPage] = useState(null);
     const [totalReaction, setTotalReaction] = useState();
+    const [reactionCounts, setReactionCounts] = useState({
+        Tym: 0,
+        Like: 0,
+        Haha: 0,
+    });
     const [token, setToken] = useState();
     const [nextPageImage, setNextPageImage] = useState(null)
     const [imagesPost, setImagesPost] = useState([])
@@ -38,7 +43,7 @@ function RenderPost({ item, onDelete }) {
     const [selectedImage, setSelectedImage] = useState(null)
     const [surveyQuestions, setSurveyQuestions] = useState(item.post_survey?.survey_questions || []);
 
-    const [loadingComment,setLoadingComment] = useState(null)
+    const [loadingComment, setLoadingComment] = useState(null)
 
     const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
     const [editedPost, setEditedPost] = useState(item.post_content || '');
@@ -64,8 +69,24 @@ function RenderPost({ item, onDelete }) {
         comment_content: '',
         post: item.id
     })
-    const [surveyResponses , setSurveyResponses] = useState({});
+    const [surveyResponses, setSurveyResponses] = useState({});
 
+
+    const updateReactionCounts = (reactions) => {
+        const counts = { Tym: 0, Like: 0, Haha: 0 };
+
+        reactions.forEach((reaction) => {
+            if (reaction.reaction === 'Tym') {
+                counts.Tym += reaction.count;
+            } else if (reaction.reaction === 'Like') {
+                counts.Like += reaction.count;
+            } else if (reaction.reaction === 'Haha') {
+                counts.Haha += reaction.count;
+            }
+        });
+
+        setReactionCounts(counts);
+    };
 
     //Lay so cam xuc cua 1 bai viet
     useEffect(() => {
@@ -74,6 +95,7 @@ function RenderPost({ item, onDelete }) {
                 let response = await getTotalReactionss(token, item.id)
                 if (response) {
                     setTotalReaction(response.total_reactions)
+                    updateReactionCounts(response.reactions)
                 }
             }
             catch (error) {
@@ -242,46 +264,83 @@ function RenderPost({ item, onDelete }) {
     }, [item, token])
 
     const test = async (reactionType) => {
-        await handleReaction(reactionType)
-    }
+        await handleReaction(reactionType);
+
+        // Cập nhật lại counts khi người dùng thay đổi cảm xúc
+        const newCounts = { ...reactionCounts }; // Lấy số lượng ban đầu từ reactionCounts
+
+        // Nếu cảm xúc hiện tại không phải là reactionType, giảm số lượng của cảm xúc cũ đi
+        if (reaction && reaction !== reactionType) {
+            newCounts[reaction] -= 1;
+        }
+
+        // Tăng số lượng của cảm xúc mới
+        if (reactionType === reaction) {
+            // Nếu nhấn lại cảm xúc đã chọn, giảm đi 1
+            newCounts[reactionType] -= 1;
+        } else {
+            newCounts[reactionType] += 1;
+        }
+
+        // Cập nhật lại reactionCounts trong state
+        setReactionCounts(newCounts);
+    };
 
     //Ham xu ly khi nguoi dung tha cam xuc
     const handleReaction = async (reactionType) => {
         if (reaction && reaction === reactionType) {
-            //Neu dang co cam xuc va giong cai cu thi xoa
+            // Nếu người dùng chọn lại cảm xúc cũ, xóa cảm xúc đó và giảm số lượng
             try {
-                let response = await deleteReactionss(token, reactionID)
-                setReaction('')
+                let response = await deleteReactionss(token, reactionID);
+                setReaction('');
                 setTotalReaction((prev) => prev - 1);
+
+                // Cập nhật lại reactionCounts khi xóa
+                setReactionCounts((prev) => ({
+                    ...prev,
+                    [reaction]: prev[reaction] - 1,
+                }));
             } catch (error) {
-                console.log("Error delete reactions: ", error)
+                console.log("Error delete reactions: ", error);
             }
-        }
-        else if (reaction && reaction != reactionType) {
-            // neu dang co cam xuc va khac cai cu thi cap nhat cai moi
+        } else if (reaction && reaction !== reactionType) {
+            // Nếu người dùng chọn cảm xúc mới, cập nhật lại cảm xúc mới và giảm số lượng cũ
             try {
                 const dataReactions = {
                     reaction: reactionType
-                }
-                let response = await updateReactionss(token, reactionID, dataReactions)
-                setReaction(reactionType)
+                };
+                let response = await updateReactionss(token, reactionID, dataReactions);
+                setReaction(reactionType);
+
+                // Cập nhật lại reactionCounts
+                setReactionCounts((prev) => ({
+                    ...prev,
+                    [reaction]: prev[reaction] - 1, // Giảm số lượng cảm xúc cũ
+                    [reactionType]: prev[reactionType] + 1, // Tăng số lượng cảm xúc mới
+                }));
             } catch (error) {
-                console.log("Error update reactions: ", error)
+                console.log("Error update reactions: ", error);
             }
-        }
-        else {// neu khong co cam xuc
+        } else {
+            // Nếu chưa có cảm xúc, thêm cảm xúc mới
             try {
                 const dataReactions = {
                     reaction: reactionType,
                     account: currentAccountUser.user.id,
-                    post: item.id
-                }
-                let response = await addReactionss(token, dataReactions)
-                setReaction(reactionType)
-                setReactionID(response.id)//Cap nhat id reaction vi neu them cam xuc moi thi id se thay doi, khong dung id truoc do duoc
+                    post: item.id,
+                };
+                let response = await addReactionss(token, dataReactions);
+                setReaction(reactionType);
+                setReactionID(response.id); // Cập nhật ID reaction mới
                 setTotalReaction((prev) => prev + 1);
+
+                // Cập nhật lại reactionCounts
+                setReactionCounts((prev) => ({
+                    ...prev,
+                    [reactionType]: prev[reactionType] + 1,
+                }));
             } catch (error) {
-                console.log("Error add reactions: ", error)
+                console.log("Error add reactions: ", error);
             }
         }
     };
@@ -327,72 +386,72 @@ function RenderPost({ item, onDelete }) {
             });
         }
     }, [totalReactionAccountt])
-//Xử lý thêm câu trả lời
-const handleSubmitAnswer = async (questionId) => {
-    if (!surveyResponses[questionId]) {
-        Alert.alert("Lỗi", "Vui lòng nhập câu trả lời trước khi gửi.");
-        return;
-    }
-
-    try {
-        const postSurveyId = item.post_survey.id || item.post_survey.post;
-
-        const responseData = {
-            account: currentAccountUser.user.id,
-            post_survey: postSurveyId,
-        };
-        console.log(" Gửi dữ liệu đến addSurveyResponse:", responseData);
-        // Gửi request tạo survey_response
-        const surveyResponse = await addSurveyResponse(token, responseData);
-
-        if (!surveyResponse || !surveyResponse.id) {
-            console.log(" API trả về dữ liệu không hợp lệ:", surveyResponse);
-            Alert.alert("Lỗi", "Không thể tạo survey response.");
+    //Xử lý thêm câu trả lời
+    const handleSubmitAnswer = async (questionId) => {
+        if (!surveyResponses[questionId]) {
+            Alert.alert("Lỗi", "Vui lòng nhập câu trả lời trước khi gửi.");
             return;
         }
 
-        console.log(" Survey response được tạo:", surveyResponse);
+        try {
+            const postSurveyId = item.post_survey.id || item.post_survey.post;
 
-        //  Gửi câu trả lời
-        const surveyAnswerData = {
-            answer_value: surveyResponses[questionId],
-            survey_question: questionId,
-            survey_response: surveyResponse.id,
-        };
+            const responseData = {
+                account: currentAccountUser.user.id,
+                post_survey: postSurveyId,
+            };
+            console.log(" Gửi dữ liệu đến addSurveyResponse:", responseData);
+            // Gửi request tạo survey_response
+            const surveyResponse = await addSurveyResponse(token, responseData);
 
-        console.log(" Gửi dữ liệu đến submitSurveyAnswer:", surveyAnswerData);
-        const newAnswer = await submitSurveyAnswer(token, surveyAnswerData);
+            if (!surveyResponse || !surveyResponse.id) {
+                console.log(" API trả về dữ liệu không hợp lệ:", surveyResponse);
+                Alert.alert("Lỗi", "Không thể tạo survey response.");
+                return;
+            }
 
-        Alert.alert("Thành công", "Câu trả lời đã được gửi!");
+            console.log(" Survey response được tạo:", surveyResponse);
 
-        //  Cập nhật danh sách câu trả lời ngay trên UI
-        setSurveyQuestions((prevQuestions) =>
-            prevQuestions.map((q) => {
-                if (q.id === questionId) {
-                    return {
-                        ...q,
-                        survey_answers: [
-                            ...(q.survey_answers || []),
-                            {
-                                id: newAnswer.id,
-                                answer_value: surveyResponses[questionId],
-                                survey_response: surveyResponse.id,
-                            },
-                        ],
-                    };
-                }
-                return q;
-            })
-        );
+            //  Gửi câu trả lời
+            const surveyAnswerData = {
+                answer_value: surveyResponses[questionId],
+                survey_question: questionId,
+                survey_response: surveyResponse.id,
+            };
 
-        // Reset input sau khi gửi thành công
-        setSurveyResponses({ ...surveyResponses, [questionId]: "" });
+            console.log(" Gửi dữ liệu đến submitSurveyAnswer:", surveyAnswerData);
+            const newAnswer = await submitSurveyAnswer(token, surveyAnswerData);
 
-    } catch (error) {
-        console.log(" Lỗi khi gửi câu trả lời:", error);
-        Alert.alert("Lỗi", "Không thể gửi câu trả lời. Vui lòng thử lại.");
-    }
-};
+            Alert.alert("Thành công", "Câu trả lời đã được gửi!");
+
+            //  Cập nhật danh sách câu trả lời ngay trên UI
+            setSurveyQuestions((prevQuestions) =>
+                prevQuestions.map((q) => {
+                    if (q.id === questionId) {
+                        return {
+                            ...q,
+                            survey_answers: [
+                                ...(q.survey_answers || []),
+                                {
+                                    id: newAnswer.id,
+                                    answer_value: surveyResponses[questionId],
+                                    survey_response: surveyResponse.id,
+                                },
+                            ],
+                        };
+                    }
+                    return q;
+                })
+            );
+
+            // Reset input sau khi gửi thành công
+            setSurveyResponses({ ...surveyResponses, [questionId]: "" });
+
+        } catch (error) {
+            console.log(" Lỗi khi gửi câu trả lời:", error);
+            Alert.alert("Lỗi", "Không thể gửi câu trả lời. Vui lòng thử lại.");
+        }
+    };
 
 
 
@@ -464,60 +523,60 @@ const handleSubmitAnswer = async (questionId) => {
                     <Text style={styles.postContent}>{item.post_content}</Text>
                     {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
                     {item.post_survey && (
-                <View>
-                    <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
-                    {sortedSurveyQuestions.map((question) => (
-    <View key={question.id} style={styles.questionContainer}>
-        {/* Hiển thị câu hỏi */}
-        <Text style={styles.surveyQuestion}>
-            {question.question_order}. {question.question_content}
-        </Text>
-        {/* {Nhập câu trả lời} */}
-        <TextInput style={styles.answerInput}
-        placeholder='Nhập câu trả lời..'
-        value={surveyResponses[question.id] || ""}
-        onChangeText={(text) => setSurveyResponses({...surveyResponses, [question.id]: text})}></TextInput>
-        {/* Nút gửi câu trả lời */}
-        <TouchableOpacity
-            style={styles.submitAnswerButton}
-            onPress={() => handleSubmitAnswer(question.id)}
-        >
-            <Text style={styles.submitAnswerText}>Gửi</Text>
-        </TouchableOpacity>
-        {/* Hiển thị danh sách câu trả lời */}
-   
-    {surveyQuestions.find(q => q.id === question.id)?.survey_answers?.length > 0 ? (
-        surveyQuestions.find(q => q.id === question.id)?.survey_answers.map((answer) => {
-            const respondent = item.post_survey.survey_responses.find(
-                (response) => response.id === answer.survey_response
-            );
+                        <View>
+                            <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
+                            {sortedSurveyQuestions.map((question) => (
+                                <View key={question.id} style={styles.questionContainer}>
+                                    {/* Hiển thị câu hỏi */}
+                                    <Text style={styles.surveyQuestion}>
+                                        {question.question_order}. {question.question_content}
+                                    </Text>
+                                    {/* {Nhập câu trả lời} */}
+                                    <TextInput style={styles.answerInput}
+                                        placeholder='Nhập câu trả lời..'
+                                        value={surveyResponses[question.id] || ""}
+                                        onChangeText={(text) => setSurveyResponses({ ...surveyResponses, [question.id]: text })}></TextInput>
+                                    {/* Nút gửi câu trả lời */}
+                                    <TouchableOpacity
+                                        style={styles.submitAnswerButton}
+                                        onPress={() => handleSubmitAnswer(question.id)}
+                                    >
+                                        <Text style={styles.submitAnswerText}>Gửi</Text>
+                                    </TouchableOpacity>
+                                    {/* Hiển thị danh sách câu trả lời */}
 
-            return respondent ? (
-                <View key={answer.id} style={styles.answerWrapper}>
-                    <View style={styles.userContainer}>
-                        <Image
-                            source={{ uri: processImageURL(respondent.account.avatar) }}
-                            style={styles.userAvatar}
-                        />
-                        <Text style={styles.userName}>{respondent.account.full_name}</Text>
-                    </View>
-                    <View style={styles.answerBox}>
-                        <Text style={styles.answerText}>{answer.answer_value}</Text>
-                    </View>
-                </View>
-            ) : null;
-        })
-    ) : (
-        <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
-    )}
+                                    {surveyQuestions.find(q => q.id === question.id)?.survey_answers?.length > 0 ? (
+                                        surveyQuestions.find(q => q.id === question.id)?.survey_answers.map((answer) => {
+                                            const respondent = item.post_survey.survey_responses.find(
+                                                (response) => response.id === answer.survey_response
+                                            );
+
+                                            return respondent ? (
+                                                <View key={answer.id} style={styles.answerWrapper}>
+                                                    <View style={styles.userContainer}>
+                                                        <Image
+                                                            source={{ uri: processImageURL(respondent.account.avatar) }}
+                                                            style={styles.userAvatar}
+                                                        />
+                                                        <Text style={styles.userName}>{respondent.account.full_name}</Text>
+                                                    </View>
+                                                    <View style={styles.answerBox}>
+                                                        <Text style={styles.answerText}>{answer.answer_value}</Text>
+                                                    </View>
+                                                </View>
+                                            ) : null;
+                                        })
+                                    ) : (
+                                        <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
+                                    )}
 
 
 
-    </View>
-))}
+                                </View>
+                            ))}
 
-                </View>
-            )}
+                        </View>
+                    )}
                 </View>
             )}
 
@@ -574,21 +633,37 @@ const handleSubmitAnswer = async (questionId) => {
             </Modal>
 
             <View style={styles.footer}>
+                {/* Hiển thị tổng số lượng phản ứng */}
                 <Text>{totalReaction}</Text>
-                <TouchableOpacity style={styles.actionButton}
-                    onPress={() => test('Like')}>
-                    <FontAwesome name="thumbs-up" size={20} color={reaction === 'Like' ? 'blue' : 'gray'} />
+
+                {/* Nút Like với số lượng */}
+                <TouchableOpacity style={styles.actionButton} onPress={() => test('Like')}>
+                    <View style={styles.iconContainer}>
+                        <FontAwesome name="thumbs-up" size={20} color={reaction === 'Like' ? 'blue' : 'gray'} />
+                        {/* Hiển thị số lượng Like */}
+                        <Text style={styles.iconText}>{reactionCounts.Like}</Text>
+                    </View>
                     <Text style={styles.actionText}>Like</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}
-                    onPress={() => test('Haha')}>
-                    <FontAwesome name="smile-o" size={20} color={reaction === 'Haha' ? 'orange' : 'gray'} />
+
+                {/* Nút Haha với số lượng */}
+                <TouchableOpacity style={styles.actionButton} onPress={() => test('Haha')}>
+                    <View style={styles.iconContainer}>
+                        <FontAwesome name="smile-o" size={20} color={reaction === 'Haha' ? 'orange' : 'gray'} />
+                        {/* Hiển thị số lượng Haha */}
+                        <Text style={styles.iconText}>{reactionCounts.Haha}</Text>
+                    </View>
                     <Text style={styles.actionText}>Haha</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}
-                    onPress={() => test('Tym')}>
-                    <FontAwesome name="heart" size={20} color={reaction === 'Tym' ? 'red' : 'gray'} />
-                    <Text style={styles.actionText}>Tim</Text>
+
+                {/* Nút Tym với số lượng */}
+                <TouchableOpacity style={styles.actionButton} onPress={() => test('Tym')}>
+                    <View style={styles.iconContainer}>
+                        <FontAwesome name="heart" size={20} color={reaction === 'Tym' ? 'red' : 'gray'} />
+                        {/* Hiển thị số lượng Tym */}
+                        <Text style={styles.iconText}>{reactionCounts.Tym}</Text>
+                    </View>
+                    <Text style={styles.actionText}>Tym</Text>
                 </TouchableOpacity>
             </View>
 
@@ -603,8 +678,8 @@ const handleSubmitAnswer = async (questionId) => {
                                 style={styles.avatar}
                             />
                             <View style={styles.commentTextContainer}>
-                                <Text style={styles.userName} onPress={()=>navigation.navigate('Profile',{thisAccount:currentAccountUser})}>{comment.account.full_name || 'Anonymous'}</Text>
-                                <Text style={styles.commentDate}>{comment.created_date}</Text>                             
+                                <Text style={styles.userName} onPress={() => navigation.navigate('Profile', { thisAccount: currentAccountUser })}>{comment.account.full_name || 'Anonymous'}</Text>
+                                <Text style={styles.commentDate}>{comment.created_date}</Text>
                             </View>
 
                             {/* Nút ba chấm cho mỗi bình luận */}
@@ -744,6 +819,21 @@ const styles = StyleSheet.create({
     },
     actionButton: {
         alignItems: 'center',
+    },
+    iconContainer: {
+        marginTop: 15,
+        position: 'relative',
+        marginBottom: 5,
+    },
+    iconText: {
+        position: 'absolute',
+        top: -20,
+        left: '50%',
+        transform: [{ translateX: -10 }],
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: 'black',
+        marginBottom: 5
     },
     actionText: {
         fontSize: 14,
@@ -896,7 +986,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: "row",
-        marginLeft: 10, 
+        marginLeft: 10,
     },
     saveButton: {
         backgroundColor: "#33CC33",
@@ -934,7 +1024,7 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 3,
     },
-    
+
     surveyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -942,7 +1032,7 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         textAlign: 'center',
     },
-    
+
     surveyTime: {
         fontSize: 14,
         color: '#d9534f',
@@ -950,45 +1040,45 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 10,
     },
-    
+
     questionContainer: {
         marginBottom: 15,
         paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
     },
-    
+
     surveyQuestion: {
         fontSize: 16,
         fontWeight: '600',
         color: '#333',
         marginBottom: 8,
     },
-    
+
     answerWrapper: {
         marginTop: 10,
         paddingHorizontal: 10,
     },
-    
+
     userContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
     },
-    
+
     userAvatar: {
         width: 35,
         height: 35,
         borderRadius: 17.5,
         marginRight: 10,
     },
-    
+
     userName: {
         fontSize: 14,
         fontWeight: 'bold',
         color: '#007bff',
     },
-    
+
     answerBox: {
         backgroundColor: '#e9ecef',
         padding: 10,
@@ -996,12 +1086,12 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         maxWidth: '80%',
     },
-    
+
     answerText: {
         fontSize: 14,
         color: '#333',
     },
-    
+
     noAnswerText: {
         fontSize: 14,
         fontStyle: 'italic',
@@ -1030,8 +1120,8 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
-    
-    
+
+
 });
 
 export default RenderPost;

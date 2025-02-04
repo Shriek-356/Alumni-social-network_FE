@@ -40,7 +40,6 @@ const UserInfoScreen = () => {
     fetchToken();
   }, []);
 
-  // Trạng thái chỉnh sửa của từng trường thông tin
   const [isEditing, setIsEditing] = useState({
     first_name: false,
     last_name: false,
@@ -49,7 +48,6 @@ const UserInfoScreen = () => {
 
   const [editedInfo, setEditedInfo] = useState({});
 
-  // Hàm bắt đầu chỉnh sửa một trường
   const startEditing = (field) => {
     setIsEditing({
       ...isEditing,
@@ -61,7 +59,6 @@ const UserInfoScreen = () => {
     });
   };
 
-  // Hàm hủy chỉnh sửa và trở lại giá trị ban đầu
   const cancelEditing = (field) => {
     setIsEditing({
       ...isEditing,
@@ -73,7 +70,6 @@ const UserInfoScreen = () => {
     });
   };
 
-  // Hàm xử lý thay đổi thông tin khi người dùng nhập vào
   const handleInputChange = (field, value) => {
     setEditedInfo({
       ...editedInfo,
@@ -81,7 +77,6 @@ const UserInfoScreen = () => {
     });
   };
 
-  // Hàm lưu thông tin khi nhấn nút "Lưu"
   const handleSave = async (field) => {
     if (token) {
       setLoading(true);
