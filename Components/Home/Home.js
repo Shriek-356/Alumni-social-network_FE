@@ -147,4 +147,3 @@ const styless = StyleSheet.create({
         fontWeight: 'bold', 
     },
 });
-

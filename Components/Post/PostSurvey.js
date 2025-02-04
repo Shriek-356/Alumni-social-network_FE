@@ -11,10 +11,12 @@ import {
   ScrollView,
 } from "react-native";
 import { getToken } from "../../configs/api";
-import { CurrentAccountUserContext } from "../../App";
+import {  CurrentUserContext } from "../../App";
 import { addPostSurvey, addQuestionPostSurvey } from "../../configs/API/PostSurveyApi";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { PostSurveyContext } from "../../App";
+import { Picker } from "@react-native-picker/picker";
+import { Switch } from "react-native-gesture-handler";
 
 const PostSurvey = () => {
   const [postSurveys, setPostSurveys] = useState([]);
@@ -23,13 +25,17 @@ const PostSurvey = () => {
   const [newSurveyContent, setNewSurveyContent] = useState("");
   const [token, setToken] = useState();
   const [loading, setLoading] = useState(false);
+  const [isRequired, setIsRequired] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [newSurveyQuestion, setNewSurveyQuestion] = useState("");
   const [questionList, setQuestionList] = useState([]);
+  const [selectedQuestionType , setSelectedQuestionType] = useState("Chương trình đào tạo")
   const navigation = useNavigation();
-  const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext);
-  const [postServeyInfo, setPostSurveyInfo] = useContext(PostSurveyContext);
+  const [currenttUser] = useContext(CurrentUserContext);
+
+  const [postId, setPostId] = useContext(PostSurveyContext);
+
 
   // Các state riêng cho picker của startTime
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -50,27 +56,26 @@ const PostSurvey = () => {
   }, []);
 
   const handleAddPostSurvey = async () => {
-    if (newSurveyTitle && newSurveyContent && startTime && endTime && currentAccountUser) {
+    if (newSurveyTitle && newSurveyContent && startTime && endTime && currenttUser) {
       const surveyData = {
         post_survey_title: newSurveyTitle,
         start_time: startTime,
         end_time: endTime,
         post_content: newSurveyContent,
-        account_id: currentAccountUser.id,
+        account_id: currenttUser.id,
       };
       try {
         setLoading(true);
         const response = await addPostSurvey(token, surveyData);
-        const newPostSurveyId = response.post.id;
+        const newPostSurveyId = response.post || response.id
+        console.log("Lưu post_id vào context:", newPostSurveyId);
+        setPostId(newPostSurveyId); // Lưu vào Context
+        if (!newPostSurveyId) {
+          Alert.alert("Lỗi", "Không thể lấy post_id từ API!");
+          return;
+        }
 
-        questionList.forEach(async (question) => {
-          const surveyQuestionData = {
-            question_content: question.content,
-            is_required: question.isRequired,
-            survey_question_type: question.type,
-          };
-          await addQuestionPostSurvey(token, surveyQuestionData, newPostSurveyId);
-        });
+        
 
         setNewSurveyTitle("");
         setNewSurveyContent("");
@@ -78,7 +83,9 @@ const PostSurvey = () => {
         setEndTime("");
         setNewSurveyQuestion("");
         setQuestionList([]);
-        Alert.alert("Thông báo", "Khảo sát đã được thêm thành công!");
+        
+        navigation.navigate("AddQuestionScreen")
+
       } catch (error) {
         setError("Lỗi khi thêm khảo sát");
         console.log(error);
@@ -90,22 +97,6 @@ const PostSurvey = () => {
     }
   };
 
-  const handleAddQuestion = () => {
-    if (newSurveyQuestion) {
-      const newQuestion = {
-        content: newSurveyQuestion,
-        isRequired: true,
-        type: "Employment Status",
-      };
-      setQuestionList([...questionList, newQuestion]);
-      setNewSurveyQuestion("");
-    }
-  };
-
-  // Hàm xóa câu hỏi theo index
-  const handleDeleteQuestion = (index) => {
-    setQuestionList(questionList.filter((_, i) => i !== index));
-  };
 
   // Xử lý cho startTime
   const onChangeStartDate = (event, selectedDate) => {
@@ -259,40 +250,15 @@ const PostSurvey = () => {
           />
         )}
       </View>
-
-      {/* Input thêm câu hỏi khảo sát */}
-      <TextInput
-        style={styles.input}
-        value={newSurveyQuestion}
-        onChangeText={setNewSurveyQuestion}
-        placeholder="Nhập câu hỏi khảo sát"
-        placeholderTextColor="#999"
-      />
-      <TouchableOpacity style={styles.addButton} onPress={handleAddQuestion}>
-        <Text style={styles.addButtonText}>Thêm câu hỏi khảo sát vào bài viết</Text>
-      </TouchableOpacity>
-
-      {/* Hiển thị danh sách câu hỏi đã thêm (cho phép cuộn nếu danh sách quá dài) */}
-      {questionList.length > 0 && (
-        <ScrollView style={styles.questionListContainer}>
-          <Text style={styles.questionListTitle}>Câu hỏi đã thêm:</Text>
-          {questionList.map((question, index) => (
-            <View key={index} style={styles.questionItem}>
-              <Text style={styles.questionText}>{question.content}</Text>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteQuestion(index)}
-              >
-                <Text style={styles.deleteButtonText}>Xóa</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleAddPostSurvey}>
-        <Text style={styles.submitButtonText}>Thêm Bài Viết</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.submitButton}
+  onPress={() => {
+    handleAddPostSurvey(); // Gọi hàm thêm khảo sát
+    navigation.navigate("AddQuestionScreen"); // Chuyển sang màn hình câu hỏi
+  }}
+>
+  <Text style={styles.submitButtonText}>Tiếp tục</Text>
+</TouchableOpacity>
     </View>
   );
 };
@@ -423,6 +389,30 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  picker: {
+    backgroundColor: "#fff",
+    marginBottom: 15,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: "#333",
+    marginRight: 10,
+  },
+  questionItem: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  questionText: {
+    fontSize: 15,
+    color: "#555",
   },
 });
 

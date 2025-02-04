@@ -12,9 +12,19 @@ import { Pressable } from 'react-native';
 import { axiosDAuthApiInstance } from '../../configs/api';
 import { deleteCommentt } from '../../configs/API/PostApi';
 import { ActivityIndicator } from 'react-native';
+<<<<<<< HEAD
 import { updatePostt } from '../../configs/API/PostApi';
+=======
+import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSurveyApi';
+>>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
 
 function RenderPost({ item, onDelete }) {
+
+//Sắp xếp câu hỏi trước khi render
+    const sortedSurveyQuestions = item.post_survey?.survey_questions
+        ? [...item.post_survey.survey_questions].sort((a, b) => a.question_order - b.question_order)
+        : [];
+
 
     const [menuVisible, setMenuVisible] = useState(false);//Nay la cua bai viet
     const [menuVisibleComment, setMenuVisibleComment] = useState(false);//Nay la cua binh luan
@@ -31,6 +41,7 @@ function RenderPost({ item, onDelete }) {
     const [loading, setLoading] = useState(false)
     
     const [selectedImage, setSelectedImage] = useState(null)
+    const [surveyQuestions, setSurveyQuestions] = useState(item.post_survey?.survey_questions || []);
 
 
     const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
@@ -59,6 +70,7 @@ function RenderPost({ item, onDelete }) {
         comment_content: '',
         post: item.id
     })
+    const [surveyResponses , setSurveyResponses] = useState({});
 
 
     //Lay so cam xuc cua 1 bai viet
@@ -328,6 +340,75 @@ function RenderPost({ item, onDelete }) {
             });
         }
     }, [totalReactionAccountt])
+//Xử lý thêm câu trả lời
+const handleSubmitAnswer = async (questionId) => {
+    if (!surveyResponses[questionId]) {
+        Alert.alert("Lỗi", "Vui lòng nhập câu trả lời trước khi gửi.");
+        return;
+    }
+
+    try {
+        const postSurveyId = item.post_survey.id || item.post_survey.post;
+
+        const responseData = {
+            account: currentAccountUser.user.id,
+            post_survey: postSurveyId,
+        };
+        console.log(" Gửi dữ liệu đến addSurveyResponse:", responseData);
+        // Gửi request tạo survey_response
+        const surveyResponse = await addSurveyResponse(token, responseData);
+
+        if (!surveyResponse || !surveyResponse.id) {
+            console.log(" API trả về dữ liệu không hợp lệ:", surveyResponse);
+            Alert.alert("Lỗi", "Không thể tạo survey response.");
+            return;
+        }
+
+        console.log(" Survey response được tạo:", surveyResponse);
+
+        //  Gửi câu trả lời
+        const surveyAnswerData = {
+            answer_value: surveyResponses[questionId],
+            survey_question: questionId,
+            survey_response: surveyResponse.id,
+        };
+
+        console.log(" Gửi dữ liệu đến submitSurveyAnswer:", surveyAnswerData);
+        const newAnswer = await submitSurveyAnswer(token, surveyAnswerData);
+
+        Alert.alert("Thành công", "Câu trả lời đã được gửi!");
+
+        //  Cập nhật danh sách câu trả lời ngay trên UI
+        setSurveyQuestions((prevQuestions) =>
+            prevQuestions.map((q) => {
+                if (q.id === questionId) {
+                    return {
+                        ...q,
+                        survey_answers: [
+                            ...(q.survey_answers || []),
+                            {
+                                id: newAnswer.id,
+                                answer_value: surveyResponses[questionId],
+                                survey_response: surveyResponse.id,
+                            },
+                        ],
+                    };
+                }
+                return q;
+            })
+        );
+
+        // Reset input sau khi gửi thành công
+        setSurveyResponses({ ...surveyResponses, [questionId]: "" });
+
+    } catch (error) {
+        console.log(" Lỗi khi gửi câu trả lời:", error);
+        Alert.alert("Lỗi", "Không thể gửi câu trả lời. Vui lòng thử lại.");
+    }
+};
+
+
+
 
     return (
         <View style={styles.postContainer}>
@@ -400,8 +481,69 @@ function RenderPost({ item, onDelete }) {
                     </TouchableOpacity>
                 </View>
             ) : (
+                // Đoạn xử lý khác biệt post_survey
                 <View>
+<<<<<<< HEAD
                     <Text style={styles.postContent}>{postContent}</Text>
+=======
+                    <Text style={styles.postContent}>{item.post_content}</Text>
+                    {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
+                    {item.post_survey && (
+                <View>
+                    <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
+                    {sortedSurveyQuestions.map((question) => (
+    <View key={question.id} style={styles.questionContainer}>
+        {/* Hiển thị câu hỏi */}
+        <Text style={styles.surveyQuestion}>
+            {question.question_order}. {question.question_content}
+        </Text>
+        {/* {Nhập câu trả lời} */}
+        <TextInput style={styles.answerInput}
+        placeholder='Nhập câu trả lời..'
+        value={surveyResponses[question.id] || ""}
+        onChangeText={(text) => setSurveyResponses({...surveyResponses, [question.id]: text})}></TextInput>
+        {/* Nút gửi câu trả lời */}
+        <TouchableOpacity
+            style={styles.submitAnswerButton}
+            onPress={() => handleSubmitAnswer(question.id)}
+        >
+            <Text style={styles.submitAnswerText}>Gửi</Text>
+        </TouchableOpacity>
+        {/* Hiển thị danh sách câu trả lời */}
+   
+    {surveyQuestions.find(q => q.id === question.id)?.survey_answers?.length > 0 ? (
+        surveyQuestions.find(q => q.id === question.id)?.survey_answers.map((answer) => {
+            const respondent = item.post_survey.survey_responses.find(
+                (response) => response.id === answer.survey_response
+            );
+
+            return respondent ? (
+                <View key={answer.id} style={styles.answerWrapper}>
+                    <View style={styles.userContainer}>
+                        <Image
+                            source={{ uri: processImageURL(respondent.account.avatar) }}
+                            style={styles.userAvatar}
+                        />
+                        <Text style={styles.userName}>{respondent.account.full_name}</Text>
+                    </View>
+                    <View style={styles.answerBox}>
+                        <Text style={styles.answerText}>{answer.answer_value}</Text>
+                    </View>
+                </View>
+            ) : null;
+        })
+    ) : (
+        <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
+    )}
+
+
+
+    </View>
+))}
+
+                </View>
+            )}
+>>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
                 </View>
             )}
 
@@ -813,6 +955,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 14,
     },
+<<<<<<< HEAD
     lockedCommentContainer: {
         backgroundColor: '#f8d7da', 
         borderRadius: 8,             
@@ -828,6 +971,119 @@ const styles = StyleSheet.create({
         fontStyle:'italic',         
         textAlign: 'center',      
     }
+=======
+    surveyContainer: {
+        backgroundColor: '#f9f9f9',
+        padding: 15,
+        borderRadius: 10,
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    
+    surveyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 5,
+        textAlign: 'center',
+    },
+    
+    surveyTime: {
+        fontSize: 14,
+        color: '#d9534f',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    
+    questionContainer: {
+        marginBottom: 15,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    
+    surveyQuestion: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    
+    answerWrapper: {
+        marginTop: 10,
+        paddingHorizontal: 10,
+    },
+    
+    userContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    
+    userAvatar: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        marginRight: 10,
+    },
+    
+    userName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#007bff',
+    },
+    
+    answerBox: {
+        backgroundColor: '#e9ecef',
+        padding: 10,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        maxWidth: '80%',
+    },
+    
+    answerText: {
+        fontSize: 14,
+        color: '#333',
+    },
+    
+    noAnswerText: {
+        fontSize: 14,
+        fontStyle: 'italic',
+        color: '#888',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+
+    answerInput: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 5,
+        fontSize: 14,
+        backgroundColor: "#fff"
+    },
+    submitAnswerButton: {
+        backgroundColor: '#007bff',
+        padding: 10,
+        borderRadius: 5,
+        marginTop: 5,
+        alignItems: 'center',
+    },
+    submitAnswerText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    
+    
+>>>>>>> f746c62dbb16fd4d8db23e03a12bafd5266faa84
 });
 
 export default RenderPost;

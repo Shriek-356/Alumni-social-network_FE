@@ -14,6 +14,9 @@ import SearchScreen from './Components/ChatScreen/SearchScreen';
 import ApprovalScreen from './Components/Home/ApprovalScreen';
 import RegisterLecturer from './Components/User/RegisterLecturer';
 import PostSurVey from './Components/Post/PostSurvey';
+import AddQuestionScreen from './Components/Post/AddQuestionScreen';
+import PostInvited from './Components/Post/PostInvited';
+
 import UserInfoScreen from './Components/User/UserInfoScreen';
 
 const Stack = createStackNavigator();
@@ -40,15 +43,7 @@ export default function App() {
     gender: '',
     alumni_account_code: ''
   });
-  const [postSurveyInfo, setPostSurveyInfo] = useState({
-    post_survey_title: '',
-    start_time:'',
-    end_time:'',
-    post_content:'',
-    is_closed:''
-
-
-  });
+  const [postId, setPostId] = useState(null);
 
   const [currentAlumniAccount, setCurrentAlumniAccount] = useState({})
   const [currentUser, setCurrentUser] = useState({})
@@ -65,6 +60,8 @@ export default function App() {
       <TotalReactionAccountContext.Provider value={[totalReactionAccount, setTotalReactionAccount]}>
         <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
+          <PostSurveyContext.Provider value={[postId, setPostId ]}>
+
           <PostSurveyContext.Provider value={[postSurveyInfo , setPostSurveyInfo]}>
             <RoomContext.Provider value={[getRoom, setRoom]}>
               <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
@@ -105,6 +102,11 @@ export default function App() {
                     />
                     <Stack.Screen name="PostSurvey" component={PostSurVey}
                       options={{ headerShown: false }}
+                    />
+                    <Stack.Screen name="AddQuestionScreen" component={AddQuestionScreen}
+                      options={{ headerShown: false }} />
+                    <Stack.Screen name ="PostInvited" component={PostInvited}
+                      options ={{headerShown:false}}
                     />
                      <Stack.Screen name="UserInfoScreen" component={UserInfoScreen}
                       options={{ headerShown: false }}
