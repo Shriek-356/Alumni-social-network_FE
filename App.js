@@ -108,14 +108,14 @@ export default function App() {
                     <Stack.Screen name ="PostInvited" component={PostInvited}
                       options ={{headerShown:false}}
                     />
-<<<<<<< Updated upstream
+
                     <Stack.Screen name ="UserInfoScreen" component={UserInfoScreen}
                       options ={{headerShown:false}}
                     />
-=======
+
                     <Stack.Screen name="Group" component={Group}
                       options={{headerShown:false}}/>
->>>>>>> Stashed changes
+
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>
