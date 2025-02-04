@@ -15,6 +15,8 @@ import ApprovalScreen from './Components/Home/ApprovalScreen';
 import RegisterLecturer from './Components/User/RegisterLecturer';
 import PostSurVey from './Components/Post/PostSurvey';
 import AddQuestionScreen from './Components/Post/AddQuestionScreen';
+import PostInvited from './Components/Post/PostInvited';
+
 
 const Stack = createStackNavigator();
 
@@ -100,6 +102,9 @@ export default function App() {
                     />
                     <Stack.Screen name="AddQuestionScreen" component={AddQuestionScreen}
                       options={{ headerShown: false }} />
+                    <Stack.Screen name ="PostInvited" component={PostInvited}
+                      options ={{headerShown:false}}
+                    />
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>
