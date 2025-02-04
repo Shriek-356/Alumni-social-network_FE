@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext } from '../../App';
 import { useContext } from 'react';
@@ -12,7 +12,11 @@ import { TotalReactionAccountContext } from '../../App';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { Pressable } from 'react-native';
 import axios from 'axios';
+import { updateAccountt } from '../../configs/API/userApi';
+import * as ImagePicker from 'expo-image-picker'
+import { getAccountUser } from '../../configs/API/userApi';
 
 
 const Profile = ({ route }) => {
@@ -25,6 +29,13 @@ const Profile = ({ route }) => {
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
     const [nextPage, setNextPage] = useState()
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [coverImage, setCoverImage] = useState(processImageURL(thisAccount.cover_avatar))
+    const [avatarImage, setAvatarImage] = useState(processImageURL(thisAccount.avatar))
+    const [imageType, setImageType] = useState('')
+    const [imageLoading, setImageLoading] = useState(false)
 
     const isOwner = thisAccount.user.id === currentAccountUser.user.id
     //lay token
@@ -41,6 +52,81 @@ const Profile = ({ route }) => {
             fetchPosts(); // Hàm fetch bài viết mới nhất
         }, [token])
     );
+
+    const fetchAccount = async () => {
+        try {
+            let response = await getAccountUser(token, currentAccountUser.user.id)
+            setCurrentAccountUser(response)
+        }
+        catch (error) {
+            console.log("Error fetch account: ", error)
+        }
+    }
+
+    const pickImage = async () => {
+        // Kiểm tra quyền truy cập ảnh
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Permission to access gallery is required!');
+            return;
+        }
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaType: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true, 
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const formData = new FormData();
+            if (!result.assets || result.assets.length === 0) {
+                alert('No image selected.');
+                return;
+            }
+            const uri = result.assets[0].uri; // Lấy URI 
+
+            const localUri = uri;
+            const filename = localUri.split('/').pop();
+            const type = `image/${filename.split('.').pop()}`;
+
+            setImageLoading(true)
+            try {
+                if (token) {
+                    if (imageType === 'cover') {
+                        formData.append('cover_avatar', {
+                            uri: localUri,
+                            name: filename,
+                            type: type,
+                        });
+                    }
+                    else if (imageType === 'avatar') {
+                        formData.append('avatar', {
+                            uri: localUri,
+                            name: filename,
+                            type: type,
+                        });
+                    }
+
+                    let response = await updateAccountt(token, currentAccountUser.user.id, formData)
+
+                    if (imageType === 'cover') {
+                        setCoverImage(response.cover_avatar);
+                    } else if (imageType === 'avatar') {
+                        setAvatarImage(response.avatar);
+                    }
+                    fetchAccount()
+                    setSelectedImage(null)//Dong modal
+                }
+
+            } catch (error) {
+                console.error('Error uploading image: ', error);
+                alert('Có lỗi xảy ra khi tải ảnh lên!');
+            }
+            finally {
+                setImageLoading(false)
+            }
+        }
+    };
+
 
     //Lay bai viet cua thisAccount duoc nhan vao de xem profile
     const fetchPosts = useCallback(async () => {
@@ -76,7 +162,7 @@ const Profile = ({ route }) => {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 let postsData = responsee.data.results
-                console.log("id bai viet trang 2: ",postsData)
+                console.log("id bai viet trang 2: ", postsData)
                 const detailsPosts = postsData.map((post) => ({
                     ...post,
                     avatar: post.account.avatar,
@@ -106,6 +192,7 @@ const Profile = ({ route }) => {
             }
         }
         fetchReactionsAccount()
+        
     }, [token, posts])
 
     function processImageURL(url) {
@@ -133,10 +220,12 @@ const Profile = ({ route }) => {
 
             {thisAccount
                 && thisAccount.cover_avatar ? (
-                <Image
-                    source={{ uri: processImageURL(thisAccount.cover_avatar) }}
-                    style={styles.coverImage}
-                />
+                <TouchableOpacity onPress={() => { setSelectedImage(processImageURL(thisAccount.cover_avatar)), setImageType('cover') }}>
+                    <Image
+                        source={{ uri: coverImage }}
+                        style={styles.coverImage}
+                    />
+                </TouchableOpacity>
             ) : (
                 <Image
                     source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_DH_M%E1%BB%9F_TPHCM.png' }} // URL của ảnh mặc định
@@ -147,14 +236,68 @@ const Profile = ({ route }) => {
             {/* avatar va ten */}
             <View style={styles.profileInfo}>
                 {thisAccount && thisAccount.avatar ? (
-                    <Image source={{ uri: processImageURL(thisAccount.avatar) }}
-                        style={styles.avatar} />
+
+                    <TouchableOpacity onPress={() => { setSelectedImage(processImageURL(thisAccount.avatar)), setImageType('avatar') }}>
+                        <Image source={{ uri: avatarImage }}
+                            style={styles.avatar} />
+                    </TouchableOpacity>
+
                 ) : (
                     <Image source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_DH_M%E1%BB%9F_TPHCM.png' }}
                         style={styles.avatar} />
                 )}
                 <Text style={styles.userName}>{thisAccount.full_name || "UserName"}</Text>
             </View>
+
+            {/* Modal hiển thị ảnh phóng to */}
+            <Modal
+                visible={!!selectedImage}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSelectedImage(null)}
+            >
+                <View style={styles.modalContainer}>
+                    {/* Vùng nhấn bên ngoài để đóng */}
+                    <Pressable style={styles.overlay} onPress={() => setSelectedImage(null)} />
+
+                    {/* Hình ảnh phóng to */}
+                    <View style={styles.modalContent}>
+                        {selectedImage && (
+                            <Image
+                                source={{ uri: selectedImage }}
+                                style={styles.zoomedImage}
+                                resizeMode="contain"
+                            />
+                        )}
+
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => setSelectedImage(null)}
+                        >
+                            <Text style={styles.closeButtonText}>Đóng</Text>
+                        </TouchableOpacity>
+
+                        {/* Chọn ảnh mới */}
+                        {isOwner && (
+                            <>
+                                <TouchableOpacity
+                                    style={styles.closeButton}
+                                    onPress={pickImage}
+                                >
+                                    <Text style={styles.closeButtonText}>Chọn ảnh mới</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+
+            {imageLoading && (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                    <Text>Đang tải ảnh...</Text>
+                </View>
+            )}
 
             {isOwner ? (<TouchableOpacity style={styles.createPostButton}
                 onPress={() => navigation.navigate('CreatePost')}
@@ -196,16 +339,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f0f2f5',
-        padding: 15
+        padding: 15,
     },
     coverImage: {
         width: '100%',
         height: 200,
         resizeMode: 'cover',
-    },
-    profileInfo: {
-        alignItems: 'center',
-        marginTop: -50,
     },
     avatar: {
         width: 100,
@@ -213,16 +352,54 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         borderWidth: 4,
         borderColor: '#fff',
-        marginBottom: 10,
+        marginTop: -50,
+    },
+    profileInfo: {
+        alignItems: 'center',
+        marginTop: 20,
     },
     userName: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
     },
-    bio: {
-        fontSize: 14,
-        color: '#888',
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  
+    },
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        width: '80%',
+        maxWidth: 400, 
+    },
+    zoomedImage: {
+        width: 300,
+        height: 300,
+        marginBottom: 20,
+    },
+    closeButton: {
+        padding: 10,
+        backgroundColor: '#FF9900',
+        borderRadius: 5,
+        marginTop: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#fff',
+        textAlign: 'center',
     },
     createPostButton: {
         backgroundColor: '#007bff',
@@ -237,21 +414,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-    post: {
-        backgroundColor: '#fff',
-        padding: 15,
-        marginBottom: 10,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
-    },
-    postContent: {
-        fontSize: 16,
-        color: '#333',
-    }, loadMoreButton: {
+    loadMoreButton: {
         backgroundColor: '#FF9900',
         paddingVertical: 10,
         paddingHorizontal: 20,

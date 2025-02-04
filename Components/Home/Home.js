@@ -14,7 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { deletePosts } from "../../configs/API/PostApi";
 import { useCallback } from "react";
 import { TouchableOpacity } from "react-native";
-import { StyleSheet } from "react-native";
+import { StyleSheet} from "react-native";
 import axios from "axios";
 
 export default function Home() {

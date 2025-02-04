@@ -15,7 +15,9 @@ const endpoints = {
     'getAlumni' : "/alumni_accounts/",
     'approvalAlumni' :(id) => `/alumni_accounts/${id}/`,
     'registerLecturer' : "/users/create_lecturer/",
-    
+    'updateAccount' :(id) => `/accounts/${id}/`,
+    'updateUser' : (id) => `/users/${id}/`,
+    'changePassword' : "/users/change-password/"
 }
 
 export const fetchUsers = async () =>{
@@ -157,6 +159,45 @@ export const registerLecturerr = async(token,data)=>{
         throw(ex)
     }
 }
+
+export const updateAccountt = async(token,id,data)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.updateAccount(id),data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const updateUserr= async(token,id,data)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.updateUser(id),data, {
+            headers: {
+                'Content-Type': 'application/json' 
+            }
+        })
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const changePasswordd= async(token,data)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).post(endpoints.changePassword,data)
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
 
 
 

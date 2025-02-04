@@ -9,12 +9,26 @@ import { useState } from "react";
 import { removeToken } from "../../configs/api";
 import { useNavigation } from "@react-navigation/native";
 
-const Account = ({ navigation }) => {
+export const handleLogout = async (token,navigation) => {
+    console.log(token)
+    console.log('b')
+    try {
+        await removeToken(token)
+        navigation.reset({
+            index: 0, // reset stack 
+            routes: [{ name: 'Login' }],
+        });
+        console.log("Đăng xuất thành công");
+    } catch (error) {
 
-    const navi = useNavigation()
+        console.error("Lỗi khi đăng xuất: ", error);
+    }
+};
+
+const Account = ({ navigation }) => {
     const [token, setToken] = useState();
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
-
+    const navi = useNavigation();
     //lay token
     useEffect(() => {
         const fetchToken = async () => {
@@ -30,23 +44,6 @@ const Account = ({ navigation }) => {
             return url.replace('image/upload/', '')
         }
     }
-
-    const handleLogout = async () => {
-        try {
-            await removeToken(token)
-
-            //setCurrentAccountUser(null)
-
-            navi.reset({
-                index: 0, // reset stack 
-                routes: [{ name: 'Login' }],
-            });
-            console.log("Đăng xuất thành công");
-        } catch (error) {
-
-            console.error("Lỗi khi đăng xuất: ", error);
-        }
-    };
 
     return (
         <View style={styles.container}>
@@ -77,7 +74,7 @@ const Account = ({ navigation }) => {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => navigation.navigate('PersonalPage')}>
+                onPress={() => navigation.navigate('UserInfoScreen')}>
                 <Text style={styles.buttonText}>Thông tin Cá Nhân</Text>
             </TouchableOpacity>
 
@@ -98,7 +95,7 @@ const Account = ({ navigation }) => {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={handleLogout}>
+                onPress={()=>handleLogout(token,navi)}>
                 <Text style={styles.buttonText}>Đăng Xuất</Text>
             </TouchableOpacity>
         </View>

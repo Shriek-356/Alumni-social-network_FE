@@ -14,6 +14,7 @@ import SearchScreen from './Components/ChatScreen/SearchScreen';
 import ApprovalScreen from './Components/Home/ApprovalScreen';
 import RegisterLecturer from './Components/User/RegisterLecturer';
 import PostSurVey from './Components/Post/PostSurvey';
+import UserInfoScreen from './Components/User/UserInfoScreen';
 
 const Stack = createStackNavigator();
 
@@ -59,12 +60,12 @@ export default function App() {
 
 
   return (
+
     <CurrentAlumniAccountContext.Provider value={[currentAlumniAccount, setCurrentAlumniAccount]}>
       <TotalReactionAccountContext.Provider value={[totalReactionAccount, setTotalReactionAccount]}>
         <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
           <PostSurveyContext.Provider value={[postSurveyInfo , setPostSurveyInfo]}>
-
             <RoomContext.Provider value={[getRoom, setRoom]}>
               <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
 
@@ -103,6 +104,9 @@ export default function App() {
                       options={{ headerShown: false }}
                     />
                     <Stack.Screen name="PostSurvey" component={PostSurVey}
+                      options={{ headerShown: false }}
+                    />
+                     <Stack.Screen name="UserInfoScreen" component={UserInfoScreen}
                       options={{ headerShown: false }}
                     />
                   </Stack.Navigator>

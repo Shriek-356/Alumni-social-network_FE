@@ -14,7 +14,8 @@ const endpoints = {
     'createPost': '/post/',
     'getImages' : (id) => `/post/${id}/images/`,
     'updatePostComment': (id) => `/comment/${id}/`,
-    'deleteComment' : (id) => `/comment/${id}/` 
+    'deleteComment' : (id) => `/comment/${id}/`,
+    'updatePost' : (id) => `/post/${id}/`
 }
 
 export const getAllPostss = async (token) => {
@@ -166,6 +167,17 @@ export const updateComment = async (token,id,data) =>{
 export const deleteCommentt = async (token,id)=>{
     try{
         let response = await axiosDAuthApiInstance(token).delete(endpoints.deleteComment(id))
+        return response.data
+    }
+    catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const updatePostt = async(token,id,data)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).patch(endpoints.updatePost(id),data)
         return response.data
     }
     catch(ex){
