@@ -14,6 +14,7 @@ import { createdGroup, invitedGroups, invitedMembers } from "../../configs/API/P
 import { CurrentUserContext } from "../../App";
 import { getAlumnis } from "../../configs/API/userApi";
 import { getAllGroup } from "../../configs/API/PostInvitedApi";
+import { PostInvitedContext } from "../../App";
 
 const Group = () => {
     const [token, setToken] = useState("");
@@ -24,6 +25,8 @@ const Group = () => {
     const [currentUser] = useContext(CurrentUserContext);
     const [groups, setGroups] = useState([]); // Danh sách nhóm
     const [selectedGroups, setSelectedGroups] = useState([]); // Nhóm được chọn
+    const [postInvitedId] = useContext(PostInvitedContext)
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         const fetchToken = async () => {
@@ -38,7 +41,7 @@ const Group = () => {
     const fetchGroups = async (token) => {
         try {
             const response = await getAllGroup(token);
-            console.log("Fetched Groups Data:", response);
+            
 
             if (response && response.results) {
                 setGroups(response.results);
@@ -53,7 +56,7 @@ const Group = () => {
     const fetchAlumnis = async (token) => {
         try {
             const response = await getAlumnis(token);
-            console.log("Fetched Alumni Data:", response);
+            
 
             if (response && response.results) {
                 setAlumnis(response.results);
@@ -78,32 +81,37 @@ const Group = () => {
     };
 
     const handleInvite = async () => {
+        if (!postInvitedId) {
+            Alert.alert("Lỗi", "Không tìm thấy Post Invitation ID!");
+            return;
+        }
+    
         if (selectedAlumnis.length === 0 && selectedGroups.length === 0) {
             Alert.alert("Thông báo", "Vui lòng chọn ít nhất một alumni hoặc một nhóm để gửi lời mời");
             return;
         }
+    
         setLoading(true);
         try {
-            // Gửi lời mời cho các nhóm (nếu có nhóm được chọn)
+            // Gửi lời mời cho các nhóm
             if (selectedGroups.length > 0) {
-                const groupPayload = { group_ids: selectedGroups };
-                await invitedGroups(token, groupPayload); // Gửi lời mời đến nhóm
+                await invitedGroups(token, postInvitedId, selectedGroups);
             }
-
-            // Gửi lời mời cho các alumni (nếu có alumni được chọn)
+    
+            // Gửi lời mời cho các alumni
             if (selectedAlumnis.length > 0) {
-                const alumniPayload = { list_alumni_id: selectedAlumnis };
-                await invitedMembers(token, alumniPayload); // Gửi lời mời đến alumni
+                await invitedMembers(token, postInvitedId, selectedAlumnis);
             }
-
+    
             Alert.alert("Thành công", "Lời mời đã được gửi thành công!");
             setSelectedAlumnis([]);
             setSelectedGroups([]);
         } catch (error) {
             console.error("Error sending invitations:", error);
             Alert.alert("Lỗi", "Không thể gửi lời mời, vui lòng thử lại!");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleCreateGroup = async () => {
@@ -123,6 +131,8 @@ const Group = () => {
             };
             await createdGroup(token, groupData);
             Alert.alert("Thành công", "Nhóm đã được tạo thành công!");
+
+            await fetchGroups(token);
             setSelectedAlumnis([]);
             setGroupName("");
         } catch (error) {
@@ -130,50 +140,57 @@ const Group = () => {
         }
         setLoading(false);
     };
+    const handleRefreshGroups = async()=>{
+        setIsRefreshing(true);
+        await fetchGroups(token);
+        setIsRefreshing(false);
+    }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Nhập tên nhóm</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nhập tên nhóm"
-                value={groupName}
-                onChangeText={setGroupName}
-            />
+        <Text style={styles.title}>Nhập tên nhóm</Text>
+        <TextInput
+            style={styles.input}
+            placeholder="Nhập tên nhóm"
+            value={groupName}
+            onChangeText={setGroupName}
+        />
 
-            <Text style={styles.title}>Chọn Cựu Sinh Viên để thêm vào lời mời</Text>
-            <FlatList
-                data={alumnis}
-                keyExtractor={(item) => item.account?.user?.id?.toString() || Math.random().toString()}
-                renderItem={({ item }) => (
-                    item.account ? (
-                        <TouchableOpacity
-                            style={[styles.alumniItem, selectedAlumnis.includes(item.account.user.id) && styles.selected]}
-                            onPress={() => toggleSelectAlumni(item.account.user.id)}
-                        >
-                            <Image 
-                                source={{ uri: item.account.avatar.replace("image/upload/", "") }} 
-                                style={styles.avatar} 
-                            />
-                            <Text style={styles.fullName}>{item.account.full_name}</Text>
-                        </TouchableOpacity>
-                    ) : null
-                )}
-            />
-
-            <Text style={styles.title}>Danh sách các nhóm</Text>
-            <FlatList
-                data={groups}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
+        <Text style={styles.title}>Chọn Cựu Sinh Viên để thêm vào nhóm</Text>
+        <FlatList
+            data={alumnis}
+            keyExtractor={(item) => item.account?.user?.id?.toString() || Math.random().toString()}
+            renderItem={({ item }) => (
+                item.account ? (
                     <TouchableOpacity
-                        style={[styles.groupItem, selectedGroups.includes(item.id) && styles.selected]}
-                        onPress={() => toggleSelectGroup(item.id)}
+                        style={[styles.alumniItem, selectedAlumnis.includes(item.account.user.id) && styles.selected]}
+                        onPress={() => toggleSelectAlumni(item.account.user.id)}
                     >
-                        <Text style={styles.groupName}>{item.name}</Text>
+                        <Image 
+                            source={{ uri: item.account.avatar.replace("image/upload/", "") }} 
+                            style={styles.avatar} 
+                        />
+                        <Text style={styles.fullName}>{item.account.full_name}</Text>
                     </TouchableOpacity>
-                )}
-            />
+                ) : null
+            )}
+        />
+
+        <Text style={styles.title}>Danh sách các nhóm</Text>
+        <FlatList
+            data={groups}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+                <TouchableOpacity
+                    style={[styles.groupItem, selectedGroups.includes(item.id) && styles.selected]}
+                    onPress={() => toggleSelectGroup(item.id)}
+                >
+                    <Text style={styles.groupName}>{item.name}</Text>
+                </TouchableOpacity>
+            )}
+            refreshing={isRefreshing}
+            onRefresh={handleRefreshGroups}
+        />
 
             <TouchableOpacity
                 style={styles.inviteButton}
@@ -188,7 +205,7 @@ const Group = () => {
                 onPress={handleCreateGroup}
                 disabled={loading}
             >
-                <Text style={styles.buttonText}>{loading ? "Đang tạo..." : "Tạo nhóm và gửi lời mời"}</Text>
+                <Text style={styles.buttonText}>{loading ? "Đang tạo..." : "Chọn các cựu sinh viên Tạo nhóm "}</Text>
             </TouchableOpacity>
         </View>
     );

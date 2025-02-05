@@ -521,6 +521,18 @@ function RenderPost({ item, onDelete }) {
                 // Đoạn xử lý khác biệt post_survey
                 <View>
                     <Text style={styles.postContent}>{item.post_content}</Text>
+                    {/* Hiển thị thông tin sự kiện nếu tồn tại */}
+
+                    {/* Hiển thị thông tin sự kiện nếu post_invitation không phải null */}
+                    {item.post_invitation && (
+                        <View style={styles.invitationContainer}>
+                            <Text style={styles.eventName}>Sự kiện: {item.post_invitation.event_name}</Text>
+                            <Text style={styles.invitationCount}>
+                                Số lượng được mời: {item.post_invitation.accounts_alumni.length} người
+                            </Text>
+                        </View>
+                    )}
+
                     {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
                     {item.post_survey && (
                         <View>
@@ -1120,6 +1132,25 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
+    invitationContainer: {
+        backgroundColor: '#f1f9ff',
+        padding: 10,
+        borderRadius: 10,
+        marginVertical: 10,
+        borderWidth: 1,
+        borderColor: '#cce5ff',
+    },
+    eventName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#007bff',
+        marginBottom: 5,
+    },
+    invitationCount: {
+        fontSize: 14,
+        color: '#555',
+    },
+    
 
 
 });
