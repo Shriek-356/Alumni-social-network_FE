@@ -14,8 +14,6 @@ import { deleteCommentt } from '../../configs/API/PostApi';
 import { ActivityIndicator } from 'react-native';
 import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSurveyApi';
 import { getCurrentUser } from '../../configs/API/userApi';
-import { updatePostt } from '../../configs/API/PostApi';
-
 function RenderPost({ item, onDelete }) {
 
     //Kiểm tra tài khoản trong ds mời và người tạo mới thấy
@@ -53,8 +51,6 @@ function RenderPost({ item, onDelete }) {
     const [surveyQuestions, setSurveyQuestions] = useState(item.post_survey?.survey_questions || []);
 
     const [loadingComment, setLoadingComment] = useState(null)
-    const [isLocked, setIsLocked] = useState(item.comment_lock)
-
 
     const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
     const [editedPost, setEditedPost] = useState(item.post_content || '');
@@ -237,20 +233,7 @@ function RenderPost({ item, onDelete }) {
         } catch (error) {
             console.log("Lỗi cập nhật bình luận: ", error);
         }
-    }
 
-    const onCommentLocked = async () => {
-        if (token) {
-            try {
-                const data = {
-                    comment_lock: !isLocked
-                }
-                await updatePostt(token, item.id, data)
-                setIsLocked(!isLocked);
-            } catch (error) {
-                console.log("Lỗi khóa bình luận: ", error)
-            }
-        }
     }
 
 
@@ -538,13 +521,6 @@ function RenderPost({ item, onDelete }) {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => onCommentLocked()}
-                                    style={styles.menuOption}
-                                >
-                                    {isLocked ? (<Text style={styles.menuOptionText}>Mở bình luận</Text>) : (<Text style={styles.menuOptionText}>Khóa bình luận</Text>)}
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
                                     onPress={() => onDelete()}
                                     style={styles.menuOption}
                                 >
@@ -813,30 +789,20 @@ function RenderPost({ item, onDelete }) {
 
                 {/*Thêm bình luận*/}
 
-                <View >
-                    {!isLocked ? (
-                        <View style={styles.commentInputContainer}>
-
-                            <TextInput
-                                style={styles.commentInput}
-                                placeholder="Nhập bình luận..."
-                                value={newComment.comment_content}
-                                onChangeText={comment_content => setNewComment({ ...newComment, comment_content })}
-                            />
-                            <TouchableOpacity style={styles.commentButton} onPress={addComment} disabled={loading}>
-                                {loading ? (
-                                    <ActivityIndicator size="small" color="#fff" />
-                                ) : (
-                                    <Text style={styles.commentButtonText}>Gửi</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <View style={styles.lockedCommentContainer}>
-                            <Text style={styles.lockedCommentText}>Đã khóa bình luận</Text>
-                        </View>
-                    )}
-
+                <View style={styles.commentInputContainer}>
+                    <TextInput
+                        style={styles.commentInput}
+                        placeholder="Nhập bình luận..."
+                        value={newComment.comment_content}
+                        onChangeText={comment_content => setNewComment({ ...newComment, comment_content })}
+                    />
+                    <TouchableOpacity style={styles.commentButton} onPress={addComment} disabled={loading}>
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.commentButtonText}>Gửi</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
             </View>
@@ -988,7 +954,7 @@ const styles = StyleSheet.create({
     },
     menuButton: {
         marginTop: 10,
-        paddingHorizontal: 90,
+        paddingHorizontal: 60,
     },
     menuContainer: {
         position: 'absolute',
@@ -1217,21 +1183,6 @@ const styles = StyleSheet.create({
         color: '#555',
     },
     
-    },lockedCommentContainer: {
-        backgroundColor: '#f8d7da', 
-        borderRadius: 8,             
-        padding: 10,                 
-        marginTop: 10,              
-        alignItems: 'center',        
-        justifyContent: 'center',   
-    },
-    lockedCommentText: {
-        color: '#721c24',           
-        fontSize: 16,                
-        fontWeight: 'bold', 
-        fontStyle:'italic',         
-        textAlign: 'center',      
-    }
 
 
 });

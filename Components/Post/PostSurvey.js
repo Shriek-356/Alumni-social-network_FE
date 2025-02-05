@@ -18,6 +18,7 @@ import { PostSurveyContext } from "../../App";
 import { Picker } from "@react-native-picker/picker";
 import { Switch } from "react-native-gesture-handler";
 
+
 const PostSurvey = () => {
   const [postSurveys, setPostSurveys] = useState([]);
   const [error, setError] = useState(null);
@@ -259,6 +260,13 @@ const PostSurvey = () => {
 >
   <Text style={styles.submitButtonText}>Tiếp tục</Text>
 </TouchableOpacity>
+{/* Nút thống kê khảo sát */}
+<TouchableOpacity
+        style={[styles.submitButton, { backgroundColor: "#3498db", marginTop: 20 }]} // Đổi màu nút
+        onPress={() => navigation.navigate("StatsPostSurvey")}
+      >
+        <Text style={styles.submitButtonText}>Xem Thống Kê Khảo Sát</Text>
+      </TouchableOpacity>
     </View>
   );
 };

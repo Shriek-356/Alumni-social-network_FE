@@ -13,6 +13,7 @@ import { CurrentAlumniAccountContext } from "../../App";
 import { getAlumniAccountt } from "../../configs/API/userApi";
 import { useEffect } from "react";
 import Icon from 'react-native-vector-icons/Feather';
+import { createMultipleRoom } from "../../configs/API/roomApi";
 
 function Login({ navigation: any }) {
     const navigation = useNavigation()
@@ -114,10 +115,14 @@ function Login({ navigation: any }) {
                                 Alert.alert("Thông báo", "Tài khoản đã bị từ chối xét duyệt")
                             }
                             else {
+                                const id = await getCurrentUserInfo(response.access_token); // Lấy ID user
+                                await createMultipleRoom(response.access_token, id);
                                 navigation.navigate('AllView')
                             }
                         }
                         else {
+                            const id = await getCurrentUserInfo(response.access_token); // Lấy ID user
+                            await createMultipleRoom(response.access_token, id);
                             navigation.navigate('AllView')
                         }
                     } else {
