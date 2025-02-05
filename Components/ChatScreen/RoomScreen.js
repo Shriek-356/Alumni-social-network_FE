@@ -69,8 +69,9 @@ const ScreenRoom = () => {
 
     // Render từng phòng
     const renderRoomItem = ({ item }) => {
-        const cleanedAvatarUrl = item.second_user.avatar.replace('image/upload/', '');
-        const lastLogin = item.second_user.user.last_login;
+        const otherUser = item.first_user.user.id === currentUser.id ? item.second_user : item.first_user;
+        const cleanedAvatarUrl = otherUser.avatar.replace('image/upload/', '');
+        const lastLogin = otherUser.user.last_login;
         const lastSeenMinutesAgo = lastLogin ? moment().diff(moment(lastLogin), 'minutes') : null;
         
         const isOnline = lastSeenMinutesAgo !== null && lastSeenMinutesAgo < 5;
@@ -92,7 +93,7 @@ const ScreenRoom = () => {
             <View style={styles.roomItem}>
                 <Image source={{ uri: cleanedAvatarUrl }} style={styles.avatar} />
                 <View style={styles.infoContainer}>
-                    <Text style={styles.roomName}>{item.second_user.full_name}</Text>
+                    <Text style={styles.roomName}>{otherUser.full_name}</Text>
                     <View style={styles.statusContainer}>
                         <View
                             style={[

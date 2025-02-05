@@ -4,6 +4,7 @@ import { Text, View, StyleSheet, Image, FlatList, ActivityIndicator, TextInput, 
 import { getMessbyRoom, sendMess } from "../../configs/API/roomApi";
 import { useNavigation } from "@react-navigation/native";
 import { getToken } from "../../configs/api";
+import { CurrentUserContext } from "../../App";
 
 const ChatScreen = () => {
     const [mess, setMess] = useState([]);
@@ -15,7 +16,8 @@ const ChatScreen = () => {
     const [nextPage, setNextPage] = useState(null);
     const [newMess, setNewMess] = useState("");
     const navigation = useNavigation();
-
+    const [currentUser] = useContext(CurrentUserContext);
+    const otherUser = room.first_user.user.id === currentUser.id ? room.second_user : room.first_user;
     useEffect(() => {
         const fetchToken = async () => {
             const userToken = await getToken();
@@ -70,12 +72,13 @@ const ChatScreen = () => {
     
 
     const renderMessItem = ({ item }) => {
-        const isCurrentUser = item.who_sent?.user?.id === room.first_user.user.id;
-        const avatarUrl = isCurrentUser
-            ? room.first_user.avatar
-            : room.second_user.avatar;
+        const isCurrentUser = item.who_sent?.user?.id === currentUser.id;
+            const avatarUrl = isCurrentUser 
+        ? '' 
+        : otherUser?.avatar?.replace('image/upload/', '') || '';
         
-        const fullAvatarUrl = avatarUrl.replace("image/upload/", "");
+        
+        const fullAvatarUrl = avatarUrl
 
         return (
             <View
@@ -84,14 +87,14 @@ const ChatScreen = () => {
                     isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
                 ]}
             >
+                {!isCurrentUser && ( // Chỉ hiển thị avatar nếu không phải currentUser
                 <View style={styles.avatarContainer}>
                     <Image
-                        source={{
-                            uri: `${fullAvatarUrl}`,
-                        }}
+                        source={{ uri: avatarUrl }}
                         style={styles.avatar}
                     />
                 </View>
+            )}
 
                 <View style={styles.messageContent}>
                     <Text style={styles.messageText}>{item.content}</Text>
@@ -108,7 +111,8 @@ const ChatScreen = () => {
         if (newMess.trim() !== "") {
             try {
                 console.log("Đang gửi tin nhắn...");
-                const response = await sendMess(token, newMess,room.first_user.user.id, room.id);
+                const response = await sendMess(token, newMess, currentUser.id, room.id);
+
                 if (response) {
                     console.log("Tin nhắn đã được gửi:", response);
                     const newMessage = {
@@ -135,7 +139,7 @@ const ChatScreen = () => {
         <View style={styles.container}>
             <Text style={styles.title}>Tin nhắn</Text>
             
-            <Text style={styles.roomInfo}>{room?.second_user?.full_name}</Text>
+            <Text style={styles.roomInfo}>{otherUser.full_name}</Text>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" />
@@ -171,7 +175,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f8f8f8", 
-        padding: 15,
+        paddingTop:50,
+        paddingLeft:15,
+        paddingBottom:15,
+        paddingRight:15,
     },
     title: {
         fontSize: 24,
@@ -200,12 +207,12 @@ const styles = StyleSheet.create({
     currentUserMessage: {
         justifyContent: "flex-end",
         alignSelf: "flex-end",
-        backgroundColor: "#f2f2f2", 
+        backgroundColor: "#DCF8C6", 
     },
     otherUserMessage: {
         justifyContent: "flex-start",
         alignSelf: "flex-start",
-        backgroundColor: "#f2f2f2", 
+        backgroundColor: "#EAEAEA", 
     },
     avatarContainer: {
         marginRight: 10,
