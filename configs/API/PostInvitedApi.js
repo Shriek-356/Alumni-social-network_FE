@@ -36,6 +36,15 @@ export const invitedGroups = async(token ,post_invited_id,group_ids)=>{
             throw (ex)
         }
         }
+export const invitedAll = async(token ,post_invited_id)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).post(endpoints.invitedAll(post_invited_id))
+        return response.data
+    } catch (ex) {
+    console.log(ex)
+    throw (ex)
+    }
+            }
 export const createdGroup = async(token,data)=>{
         try{
             let response = await axiosDAuthApiInstance(token).post(endpoints.createdGroup,data)
