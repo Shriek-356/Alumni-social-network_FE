@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { getToken } from "../../configs/api";
-import { CurrentUserContext } from "../../App";
+import { CurrentUserContext, PostInvitedContext } from "../../App";
 import { createPostInvited } from "../../configs/API/PostInvitedApi";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
@@ -28,6 +28,7 @@ const PostInvited = () => {
   const navigation = useNavigation();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [postInvitedId, setPostInvitedId] = useContext(PostInvitedContext)
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -115,6 +116,9 @@ const PostInvited = () => {
 
       const response = await createPostInvited(token, data);
       // đã bỏ Alert ở đây
+      if(response&& response.id){
+        setPostInvitedId(response.id); // Lưu postInvitedId vào context
+      }
     } catch (error) {
       console.log(error);
       Alert.alert("Lỗi", "Không thể tạo bài viết mời!");
