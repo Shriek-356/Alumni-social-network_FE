@@ -15,7 +15,6 @@ import { ActivityIndicator } from 'react-native';
 import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSurveyApi';
 import { getCurrentUser } from '../../configs/API/userApi';
 import { updatePostt } from '../../configs/API/PostApi';
-
 function RenderPost({ item, onDelete }) {
 
     //Kiểm tra tài khoản trong ds mời và người tạo mới thấy
@@ -54,7 +53,6 @@ function RenderPost({ item, onDelete }) {
 
     const [loadingComment, setLoadingComment] = useState(null)
     const [isLocked, setIsLocked] = useState(item.comment_lock)
-
 
     const [editingPost, setEditingPost] = useState(false); // Trạng thái chỉnh sửa
     const [editedPost, setEditedPost] = useState(item.post_content || '');
@@ -237,6 +235,7 @@ function RenderPost({ item, onDelete }) {
         } catch (error) {
             console.log("Lỗi cập nhật bình luận: ", error);
         }
+
     }
 
     const onCommentLocked = async () => {

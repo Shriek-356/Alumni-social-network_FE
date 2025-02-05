@@ -17,8 +17,9 @@ import PostSurVey from './Components/Post/PostSurvey';
 import AddQuestionScreen from './Components/Post/AddQuestionScreen';
 import PostInvited from './Components/Post/PostInvited';
 import Group from './Components/Post/Group';
-import UserInfoScreen from './Components/User/UserInfoScreen';
 import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
+import StatsPostSurvey from './Components/Post/StatsPostSurvey';
+import UserInfoScreen from './Components/User/UserInfoScreen';
 import StatisticsScreen from './Components/Home/StatisticsScreen';
 
 const Stack = createStackNavigator();
@@ -122,6 +123,8 @@ export default function App() {
                     <Stack.Screen name ="StatisticsScreen" component={StatisticsScreen}
                       options ={{headerShown:false}}
                     />
+                    <Stack.Screen name ="StatsPostSurvey" component={StatsPostSurvey}
+                    options ={{headerShown:false}}/>
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>
