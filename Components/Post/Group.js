@@ -10,11 +10,12 @@ import {
     StyleSheet,
 } from "react-native";
 import { getToken } from "../../configs/api";
-import { createdGroup, invitedGroups, invitedMembers } from "../../configs/API/PostInvitedApi";
+import { createdGroup, invitedGroups, invitedMembers,invitedAll } from "../../configs/API/PostInvitedApi";
 import { CurrentUserContext } from "../../App";
 import { getAlumnis } from "../../configs/API/userApi";
 import { getAllGroup } from "../../configs/API/PostInvitedApi";
 import { PostInvitedContext } from "../../App";
+
 
 const Group = () => {
     const [token, setToken] = useState("");
@@ -145,6 +146,23 @@ const Group = () => {
         await fetchGroups(token);
         setIsRefreshing(false);
     }
+    const handleInviteAll = async () => {
+    if (!postInvitedId) {
+        Alert.alert("Lỗi", "Không tìm thấy Post Invitation ID!");
+        return;
+    }
+
+    setLoading(true);
+    try {
+        await invitedAll(token, postInvitedId, []); // API mời tất cả, group_ids để trống
+        Alert.alert("Thành công", "Đã gửi lời mời tới tất cả cựu sinh viên!");
+    } catch (error) {
+        console.error("Error inviting all alumni:", error);
+        Alert.alert("Lỗi", "Không thể gửi lời mời, vui lòng thử lại!");
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <View style={styles.container}>
@@ -155,7 +173,7 @@ const Group = () => {
             value={groupName}
             onChangeText={setGroupName}
         />
-
+    
         <Text style={styles.title}>Chọn Cựu Sinh Viên để thêm vào nhóm</Text>
         <FlatList
             data={alumnis}
@@ -175,7 +193,16 @@ const Group = () => {
                 ) : null
             )}
         />
-
+    
+        {/* Nút tạo nhóm */}
+        <TouchableOpacity
+            style={styles.createButton}
+            onPress={handleCreateGroup}
+            disabled={loading}
+        >
+            <Text style={styles.buttonText}>{loading ? "Đang tạo..." : "Chọn các cựu sinh viên Tạo nhóm"}</Text>
+        </TouchableOpacity>
+    
         <Text style={styles.title}>Danh sách các nhóm</Text>
         <FlatList
             data={groups}
@@ -191,23 +218,24 @@ const Group = () => {
             refreshing={isRefreshing}
             onRefresh={handleRefreshGroups}
         />
-
-            <TouchableOpacity
-                style={styles.inviteButton}
-                onPress={handleInvite}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>{loading ? "Đang gửi..." : "Gửi lời mời"}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={styles.createButton}
-                onPress={handleCreateGroup}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>{loading ? "Đang tạo..." : "Chọn các cựu sinh viên Tạo nhóm "}</Text>
-            </TouchableOpacity>
-        </View>
+    
+        <TouchableOpacity
+            style={styles.inviteButton}
+            onPress={handleInvite}
+            disabled={loading}
+        >
+            <Text style={styles.buttonText}>{loading ? "Đang gửi..." : "Gửi lời mời"}</Text>
+        </TouchableOpacity>
+    
+        <TouchableOpacity
+            style={[styles.inviteButton, { backgroundColor: "#ffc107" }]}
+            onPress={handleInviteAll}
+            disabled={loading}
+        >
+            <Text style={styles.buttonText}>{loading ? "Đang gửi..." : "Mời tất cả cựu sinh viên"}</Text>
+        </TouchableOpacity>
+    </View>
+    
     );
 };
 
