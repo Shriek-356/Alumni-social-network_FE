@@ -17,10 +17,9 @@ import PostSurVey from './Components/Post/PostSurvey';
 import AddQuestionScreen from './Components/Post/AddQuestionScreen';
 import PostInvited from './Components/Post/PostInvited';
 import Group from './Components/Post/Group';
-import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
-
 import UserInfoScreen from './Components/User/UserInfoScreen';
 import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
+import StatisticsScreen from './Components/Home/StatisticsScreen';
 
 const Stack = createStackNavigator();
 
@@ -115,6 +114,12 @@ export default function App() {
                     <Stack.Screen name="Group" component={Group}
                       options={{headerShown:false}}/>
                     <Stack.Screen name ="UserInfoScreen" component={UserInfoScreen}
+                      options ={{headerShown:false}}
+                    />
+                    <Stack.Screen name ="UnlockAccountScreen" component={UnlockAccountScreen}
+                      options ={{headerShown:false}}
+                    />
+                    <Stack.Screen name ="StatisticsScreen" component={StatisticsScreen}
                       options ={{headerShown:false}}
                     />
                   </Stack.Navigator>

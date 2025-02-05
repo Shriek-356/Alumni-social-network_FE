@@ -95,6 +95,11 @@ const Account = ({ navigation }) => {
                         onPress={() => navigation.navigate('UnlockAccountScreen')}>
                         <Text style={styles.buttonText}>Mở khóa tài khoản</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('StatisticsScreen')}>
+                        <Text style={styles.buttonText}>Xem thống kê người dùng và bài viết</Text>
+                    </TouchableOpacity>
                 </>
             ) : (<View></View>)}
 

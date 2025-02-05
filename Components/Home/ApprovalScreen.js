@@ -6,10 +6,9 @@ import { getAlumnis } from '../../configs/API/userApi';
 import axios from 'axios';
 
 const ApprovalScreen = () => {
-    const [accounts, setAccounts] = useState([]);  // Tài khoản chờ xét duyệt
-    const [loading, setLoading] = useState(true);  // Trạng thái loading
-    const [token, setToken] = useState(null);      // Token của người dùng
-    const [nextPage, setNextPage] = useState('');  // Lưu trang tiếp theo (nếu có)
+    const [accounts, setAccounts] = useState([]);  
+    const [loading, setLoading] = useState(true); 
+    const [token, setToken] = useState(null);     
 
     // Lấy token người dùng
     useEffect(() => {
@@ -20,61 +19,60 @@ const ApprovalScreen = () => {
         fetchToken();
     }, []);
 
-    // Khi có token, tải tất cả các tài khoản chờ duyệt (duyệt hết các trang)
+    
     useEffect(() => {
         if (token) {
-            fetchAllPendingAccounts();  // Lấy tất cả tài khoản chờ duyệt
+            fetchAllPendingAccounts();  
         }
     }, [token]);
 
     const fetchAllPendingAccounts = async () => {
         try {
-            setLoading(true);  // Bắt đầu tải dữ liệu
-            let allAccounts = [];  // Mảng chứa tất cả tài khoản chờ duyệt
-            let currentPage = 'https://socialapp130124.pythonanywhere.com//alumni_accounts/';  // URL của API (thay bằng URL thực tế)
+            setLoading(true);  
+            let allAccounts = []; 
+            let currentPage = 'https://socialapp130124.pythonanywhere.com//alumni_accounts/';
 
-            // Lặp qua tất cả các trang
             while (currentPage) {
                 const response = await axios.get(currentPage, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
                 const pendingAccounts = response.data.results.filter(item => item.confirm_status === "PENDING");
-                allAccounts = [...allAccounts, ...pendingAccounts];  // Thêm tài khoản mới vào mảng
-                currentPage = response.data.next;  // Cập nhật trang tiếp theo
+                allAccounts = [...allAccounts, ...pendingAccounts];  
+                currentPage = response.data.next;  
             }
 
-            setAccounts(allAccounts);  // Lưu tất cả tài khoản vào state
+            setAccounts(allAccounts);  
         } catch (error) {
-            console.error('Error fetching all pending accounts:', error);  // Xử lý lỗi nếu có
+            console.error('Error fetching all pending accounts:', error);  
         } finally {
-            setLoading(false);  // Kết thúc quá trình tải
+            setLoading(false); 
         }
     };
 
     const handleApprove = async (accountId) => {
         try {
-            setLoading(true);  // Bắt đầu quá trình duyệt
+            setLoading(true);  
             const data = { confirm_status: "Confirmed" };
-            await approvalAlumnis(token, accountId, data);  // Duyệt tài khoản
-            setAccounts(accounts.filter(account => account.account.user.id !== accountId));  // Xóa tài khoản đã duyệt khỏi danh sách
+            await approvalAlumnis(token, accountId, data); 
+            setAccounts(accounts.filter(account => account.account.user.id !== accountId));  
         } catch (error) {
-            console.error('Error approving account:', error);  // Xử lý lỗi nếu có
+            console.error('Error approving account:', error); 
         } finally {
-            setLoading(false);  // Kết thúc quá trình duyệt
+            setLoading(false);  
         }
     };
 
     const handleReject = async (accountId) => {
         try {
-            setLoading(true);  // Bắt đầu quá trình từ chối
+            setLoading(true);  
             const data = { confirm_status: "Rejected" };
-            await approvalAlumnis(token, accountId, data);  // Từ chối tài khoản
-            setAccounts(accounts.filter(account => account.account.user.id !== accountId));  // Xóa tài khoản đã từ chối khỏi danh sách
+            await approvalAlumnis(token, accountId, data);  
+            setAccounts(accounts.filter(account => account.account.user.id !== accountId));  
         } catch (error) {
-            console.error('Error rejecting account:', error);  // Xử lý lỗi nếu có
+            console.error('Error rejecting account:', error); 
         } finally {
-            setLoading(false);  // Kết thúc quá trình từ chối
+            setLoading(false); 
         }
     };
 
@@ -113,7 +111,7 @@ const ApprovalScreen = () => {
                 <Text style={styles.noAccountsText}>Không có tài khoản nào để xét duyệt</Text> 
             ) : (
                 <FlatList
-                    data={accounts}  // Hiển thị tất cả tài khoản chờ duyệt
+                    data={accounts}  
                     keyExtractor={(item) => item.account.user.id.toString()}
                     renderItem={renderItem}
                 />

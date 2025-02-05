@@ -1217,7 +1217,7 @@ const styles = StyleSheet.create({
         color: '#555',
     },
     
-    },lockedCommentContainer: {
+    lockedCommentContainer: {
         backgroundColor: '#f8d7da', 
         borderRadius: 8,             
         padding: 10,                 
