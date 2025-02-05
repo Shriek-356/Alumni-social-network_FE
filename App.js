@@ -16,6 +16,9 @@ import RegisterLecturer from './Components/User/RegisterLecturer';
 import PostSurVey from './Components/Post/PostSurvey';
 import AddQuestionScreen from './Components/Post/AddQuestionScreen';
 import PostInvited from './Components/Post/PostInvited';
+import Group from './Components/Post/Group';
+import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
+
 import UserInfoScreen from './Components/User/UserInfoScreen';
 import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
 
@@ -30,6 +33,7 @@ export const MyUserContext = createContext();
 export const TotalReactionAccountContext = createContext()
 export const RoomContext = createContext();
 export const PostSurveyContext = createContext()
+export const PostInvitedContext = createContext()
 export default function App() {
 
   const [RegisterInfo, setRegisterInfo] = useState({
@@ -49,7 +53,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState({})
   const [currentAccountUser, setCurrentAccountUser] = useState({})
   const [totalReactionAccount, setTotalReactionAccount] = useState({})
-  
+  const [postInvitedId, setPostInvitedId] = useState(null); // Thêm state cho PostInvitedContext
+
   const [getRoom, setRoom] = useState({ user: {}, messages: [] });
 
 
@@ -61,7 +66,7 @@ export default function App() {
         <CurrentAccountUserContext.Provider value={[currentAccountUser, setCurrentAccountUser]}>
           <CurrentUserContext.Provider value={[currentUser, setCurrentUser]}>
           <PostSurveyContext.Provider value={[postId, setPostId ]}>
-
+          <PostInvitedContext.Provider value={[postInvitedId,setPostInvitedId]}>
             <RoomContext.Provider value={[getRoom, setRoom]}>
               <RegisterInfoContext.Provider value={[RegisterInfo, setRegisterInfo]}>
 
@@ -107,16 +112,16 @@ export default function App() {
                     <Stack.Screen name ="PostInvited" component={PostInvited}
                       options ={{headerShown:false}}
                     />
+                    <Stack.Screen name="Group" component={Group}
+                      options={{headerShown:false}}/>
                     <Stack.Screen name ="UserInfoScreen" component={UserInfoScreen}
-                      options ={{headerShown:false}}
-                    />
-                    <Stack.Screen name ="UnlockAccountScreen" component={UnlockAccountScreen}
                       options ={{headerShown:false}}
                     />
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>
             </RoomContext.Provider>
+            </PostInvitedContext.Provider>
             </PostSurveyContext.Provider>
           </CurrentUserContext.Provider>
         </CurrentAccountUserContext.Provider>

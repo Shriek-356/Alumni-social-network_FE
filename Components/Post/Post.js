@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, Modal, Aler
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getPostCommentss } from '../../configs/API/PostApi';
 import { getToken } from '../../configs/api';
-import { CurrentAccountUserContext, TotalReactionAccountContext } from '../../App';
+import { CurrentAccountUserContext, TotalReactionAccountContext,CurrentUserContext } from '../../App';
 import { addPostCommentss, getTotalReactionss, addReactionss, deleteReactionss, updateReactionss } from '../../configs/API/PostApi';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
@@ -13,9 +13,17 @@ import { axiosDAuthApiInstance } from '../../configs/api';
 import { deleteCommentt } from '../../configs/API/PostApi';
 import { ActivityIndicator } from 'react-native';
 import { addSurveyResponse, submitSurveyAnswer } from '../../configs/API/PostSurveyApi';
+import { getCurrentUser } from '../../configs/API/userApi';
 import { updatePostt } from '../../configs/API/PostApi';
 
 function RenderPost({ item, onDelete }) {
+
+    //Kiểm tra tài khoản trong ds mời và người tạo mới thấy
+    // Kiểm tra nếu tài khoản hiện tại không nằm trong danh sách được mời và cũng không phải người tạo
+    
+ 
+   
+    
 
     //Sắp xếp câu hỏi trước khi render
     const sortedSurveyQuestions = item.post_survey?.survey_questions
@@ -59,7 +67,7 @@ function RenderPost({ item, onDelete }) {
 
     const [currentAccountUser, setCurrentAccountUser] = useContext(CurrentAccountUserContext)
     const [totalReactionAccountt, setTotalReactionAccountt] = useContext(TotalReactionAccountContext)
-
+    const [currentUser, setCurrentUser] = useContext(CurrentUserContext)
 
     const isOwner = currentAccountUser.user.id === item.account.user.id; //Kiem tra xem bai viet do co phai la cua Account hien tai hay khong
 
@@ -90,6 +98,31 @@ function RenderPost({ item, onDelete }) {
 
         setReactionCounts(counts);
     };
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const userToken = await getToken(); // Lấy token hiện tại
+                if (userToken) {
+                    const user = await getCurrentUser(userToken); // Gọi API lấy thông tin người dùng
+                    setCurrentUser(user); // Lưu vào Context `CurrentUserContext`
+                    console.log('Current User:', user);
+                }
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+        };
+        fetchCurrentUser();
+    }, []);
+
+    // Kiểm tra nếu không có quyền xem bài viết
+    if (
+        item.post_invitation &&
+        currentUser?.id && // Kiểm tra currentUser tồn tại
+        !item.post_invitation.accounts_alumni.includes(currentUser.id) && // Người dùng hiện tại không thuộc danh sách được mời
+        currentUser.id !== item.account.user.id // Và không phải là người tạo bài viết
+    ) {
+        return null; // Không hiển thị bài viết
+    }
 
     //Lay so cam xuc cua 1 bai viet
     useEffect(() => {
@@ -544,6 +577,18 @@ function RenderPost({ item, onDelete }) {
                 // Đoạn xử lý khác biệt post_survey
                 <View>
                     <Text style={styles.postContent}>{item.post_content}</Text>
+                    {/* Hiển thị thông tin sự kiện nếu tồn tại */}
+
+                    {/* Hiển thị thông tin sự kiện nếu post_invitation không phải null */}
+                    {item.post_invitation && (
+                        <View style={styles.invitationContainer}>
+                            <Text style={styles.eventName}>Sự kiện: {item.post_invitation.event_name}</Text>
+                            <Text style={styles.invitationCount}>
+                                Số lượng được mời: {item.post_invitation.accounts_alumni.length} người
+                            </Text>
+                        </View>
+                    )}
+
                     {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
                     {item.post_survey && (
                         <View>
@@ -1152,6 +1197,26 @@ const styles = StyleSheet.create({
     submitAnswerText: {
         color: '#fff',
         fontWeight: 'bold',
+    },
+    invitationContainer: {
+        backgroundColor: '#f1f9ff',
+        padding: 10,
+        borderRadius: 10,
+        marginVertical: 10,
+        borderWidth: 1,
+        borderColor: '#cce5ff',
+    },
+    eventName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#007bff',
+        marginBottom: 5,
+    },
+    invitationCount: {
+        fontSize: 14,
+        color: '#555',
+    },
+    
     },lockedCommentContainer: {
         backgroundColor: '#f8d7da', 
         borderRadius: 8,             

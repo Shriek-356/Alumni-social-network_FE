@@ -8,9 +8,10 @@ import {
   StyleSheet,
 } from "react-native";
 import { getToken } from "../../configs/api";
-import { CurrentUserContext } from "../../App";
+import { CurrentUserContext, PostInvitedContext } from "../../App";
 import { createPostInvited } from "../../configs/API/PostInvitedApi";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "@react-navigation/native";
 
 const PostInvited = () => {
   const [eventName, setEventName] = useState(""); // Nhập tên sự kiện
@@ -24,9 +25,10 @@ const PostInvited = () => {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentUser] = useContext(CurrentUserContext);
-  
+  const navigation = useNavigation();
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [postInvitedId, setPostInvitedId] = useContext(PostInvitedContext)
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -113,7 +115,10 @@ const PostInvited = () => {
       };
 
       const response = await createPostInvited(token, data);
-      Alert.alert("Thành công", "Tạo bài viết mời thành công!");
+      // đã bỏ Alert ở đây
+      if(response&& response.id){
+        setPostInvitedId(response.id); // Lưu postInvitedId vào context
+      }
     } catch (error) {
       console.log(error);
       Alert.alert("Lỗi", "Không thể tạo bài viết mời!");
@@ -164,8 +169,10 @@ const PostInvited = () => {
       {showEndTimePicker && <DateTimePicker value={new Date()} mode="time" display="default" onChange={onChangeEndTime} />}
 
       {/* Nút tạo bài viết */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleCreatePostInvited}>
-        <Text style={styles.submitButtonText}>Tạo Bài Viết</Text>
+      <TouchableOpacity style={styles.submitButton} onPress={() => {handleCreatePostInvited();
+        navigation.navigate("Group");
+      }}>
+        <Text style={styles.submitButtonText}>Tiếp Tục</Text>
       </TouchableOpacity>
     </View>
   );
