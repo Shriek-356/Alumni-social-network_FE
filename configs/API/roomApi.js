@@ -3,8 +3,22 @@ import { axiosDAuthApiInstance } from "../api";
 const endpoints = {
   'getRoomByAccount': (id) => `/room/${id}/filter_rooms/`, 
   'getMessbyRoom':(room_id)=> `/room/${room_id}/messages/`,
-  'sendMess': '/message/'
+  'sendMess': '/message/',
+  'createMultipleRoom': '/room/create_multiple_rooms/'
 };
+
+export const createMultipleRoom = async (token, firstUserId) => {
+  try {
+    let response = await axiosDAuthApiInstance(token).post(endpoints.createMultipleRoom, {
+      first_user_id: firstUserId, // Truyền ID user hiện tại vào đây
+    });
+    return response.data;
+  } catch (ex) {
+    console.error("Error in createMultipleRoom:", ex.response ? ex.response.data : ex);
+    throw ex;
+  }
+};
+
 
 // Lấy danh sách room chat theo ID
 export const getRoomByAccount = async (token, id) => {
