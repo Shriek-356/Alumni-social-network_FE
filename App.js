@@ -16,8 +16,8 @@ import RegisterLecturer from './Components/User/RegisterLecturer';
 import PostSurVey from './Components/Post/PostSurvey';
 import AddQuestionScreen from './Components/Post/AddQuestionScreen';
 import PostInvited from './Components/Post/PostInvited';
-
 import UserInfoScreen from './Components/User/UserInfoScreen';
+import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
 
 const Stack = createStackNavigator();
 
@@ -108,6 +108,9 @@ export default function App() {
                       options ={{headerShown:false}}
                     />
                     <Stack.Screen name ="UserInfoScreen" component={UserInfoScreen}
+                      options ={{headerShown:false}}
+                    />
+                    <Stack.Screen name ="UnlockAccountScreen" component={UnlockAccountScreen}
                       options ={{headerShown:false}}
                     />
                   </Stack.Navigator>

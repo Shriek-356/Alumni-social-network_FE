@@ -17,7 +17,8 @@ const endpoints = {
     'registerLecturer' : "/users/create_lecturer/",
     'updateAccount' :(id) => `/accounts/${id}/`,
     'updateUser' : (id) => `/users/${id}/`,
-    'changePassword' : "/users/change-password/"
+    'changePassword' : "/users/change-password/",
+    'getAccounts' : '/accounts/' 
 }
 
 export const fetchUsers = async () =>{
@@ -191,6 +192,16 @@ export const updateUserr= async(token,id,data)=>{
 export const changePasswordd= async(token,data)=>{
     try{
         let response = await axiosDAuthApiInstance(token).post(endpoints.changePassword,data)
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
+
+export const getAccountss= async(token)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.getAccounts)
         return response.data
     }catch(ex){
         console.log(ex)

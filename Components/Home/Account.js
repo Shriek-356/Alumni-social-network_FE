@@ -90,6 +90,11 @@ const Account = ({ navigation }) => {
                         onPress={() => navigation.navigate('RegisterLecturer')}>
                         <Text style={styles.buttonText}>Tạo tài khoản giảng viên</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('UnlockAccountScreen')}>
+                        <Text style={styles.buttonText}>Mở khóa tài khoản</Text>
+                    </TouchableOpacity>
                 </>
             ) : (<View></View>)}
 
