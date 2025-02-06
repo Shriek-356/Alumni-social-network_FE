@@ -18,7 +18,18 @@ const endpoints = {
     'updateAccount' :(id) => `/accounts/${id}/`,
     'updateUser' : (id) => `/users/${id}/`,
     'changePassword' : "/users/change-password/",
-    'getAccounts' : '/accounts/' 
+    'getAccounts' : '/accounts/',
+    'updateLastLogin':'/users/update_last_login/'
+}
+
+export const updateLastLogin = async (token) => {
+    try{
+        let response = await axiosDAuthApiInstance(token).post(endpoints.updateLastLogin)
+        return response.data;
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
 }
 
 export const fetchUsers = async () =>{
