@@ -14,6 +14,7 @@ import { getAlumniAccountt } from "../../configs/API/userApi";
 import { useEffect } from "react";
 import Icon from 'react-native-vector-icons/Feather';
 import { createMultipleRoom } from "../../configs/API/roomApi";
+import { updateLastLogin } from "../../configs/API/userApi";
 
 function Login({ navigation: any }) {
     const navigation = useNavigation()
@@ -35,6 +36,8 @@ function Login({ navigation: any }) {
         try {
             await AsyncStorage.setItem('@access_token', token);
             console.log('Token đã được lưu: ', token);
+            // cap nhat last_login
+            updateLastLogin(token)
         } catch (error) {
             console.error('Lỗi khi lưu token: ', error);
         }
