@@ -750,7 +750,7 @@ function RenderPost({ item, onDelete }) {
                             </View>
 
                             {/* Nút ba chấm cho mỗi bình luận */}
-                            {currentAccountUser.user.id === comment.account.user.id && (
+                            {(currentAccountUser.user.id === comment.account.user.id || currentAccountUser.user.id === item.account.user.id) && (
                                 <View style={{ position: 'relative' }}>
                                     <TouchableOpacity
                                         onPress={() => SetMenuVisibleComment(comment.id)}
@@ -762,13 +762,13 @@ function RenderPost({ item, onDelete }) {
                                     {/* Menu hiển thị nếu menuVisibleComment === comment.id */}
                                     {menuVisibleComment === comment.id && (
                                         <View style={styles.menuContainer}>
-                                            <TouchableOpacity
+                                            {currentAccountUser.user.id===comment.account.user.id &&(<TouchableOpacity
                                                 onPress={() => startEditingComment(comment.id, comment.comment_content)}
                                                 style={styles.menuOption}
                                             >
                                                 <Text style={styles.menuOptionText}>Chỉnh sửa</Text>
-                                            </TouchableOpacity>
-
+                                            </TouchableOpacity>)}
+                                        
                                             <TouchableOpacity
                                                 onPress={() => onDeleteComment(comment.id)}
                                                 style={styles.menuOption}
