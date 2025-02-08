@@ -33,8 +33,11 @@ const ChatScreen = () => {
                 setLoading(true);
                 const response = await getMessbyRoom(token, room.id);
                 if (response && response.results) {
+                    //Chỉ tải lại tn mới
+                    if (response.results.length !== mess.length){
                     setMess(response.results);
                     setNextPage(response.next);
+                    }
                 }
             } catch (error) {
                 console.log("Error fetching messages", error);
@@ -43,6 +46,15 @@ const ChatScreen = () => {
             }
         }
     };
+    //Kỹ thực Polling -> real time 
+        useEffect(()=>{
+            fetchMess()//gọi lần đầu 
+            const interval = setInterval(()=>{
+                fetchMess();//Cập nhật tin mỗi 0,5s
+            },500);
+            return () => clearInterval(interval);
+        },[token,room]);
+
 
     
 
