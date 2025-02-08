@@ -30,7 +30,7 @@ const ChatScreen = () => {
     const fetchMess = async () => {
         if (token && room) {
             try {
-                setLoading(true);
+                
                 const response = await getMessbyRoom(token, room.id);
                 if (response && response.results) {
                     //Chỉ tải lại tn mới
@@ -65,7 +65,7 @@ const ChatScreen = () => {
     const loadMoreMess = async () => {
         if (nextPage && !loadingMore) {
             try {
-                setLoadingMore(true);
+                
                 const response = await fetch(nextPage, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
