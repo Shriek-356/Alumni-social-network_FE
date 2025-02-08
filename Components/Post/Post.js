@@ -22,7 +22,8 @@ function RenderPost({ item, onDelete }) {
     
  
    
-    
+    const [refresh, setRefresh] = useState(false);
+
 
     //Sắp xếp câu hỏi trước khi render
     const sortedSurveyQuestions = item.post_survey?.survey_questions
@@ -440,39 +441,33 @@ function RenderPost({ item, onDelete }) {
             Alert.alert("Lỗi", "Vui lòng nhập câu trả lời trước khi gửi.");
             return;
         }
-
+    
         try {
             const postSurveyId = item.post_survey.id || item.post_survey.post;
-
+    
             const responseData = {
                 account: currentAccountUser.user.id,
                 post_survey: postSurveyId,
             };
-            console.log(" Gửi dữ liệu đến addSurveyResponse:", responseData);
-            // Gửi request tạo survey_response
+    
             const surveyResponse = await addSurveyResponse(token, responseData);
-
+    
             if (!surveyResponse || !surveyResponse.id) {
-                console.log(" API trả về dữ liệu không hợp lệ:", surveyResponse);
                 Alert.alert("Lỗi", "Không thể tạo survey response.");
                 return;
             }
-
-            console.log(" Survey response được tạo:", surveyResponse);
-
-            //  Gửi câu trả lời
+    
             const surveyAnswerData = {
                 answer_value: surveyResponses[questionId],
                 survey_question: questionId,
                 survey_response: surveyResponse.id,
             };
-
-            console.log(" Gửi dữ liệu đến submitSurveyAnswer:", surveyAnswerData);
+    
             const newAnswer = await submitSurveyAnswer(token, surveyAnswerData);
-
+    
             Alert.alert("Thành công", "Câu trả lời đã được gửi!");
-
-            //  Cập nhật danh sách câu trả lời ngay trên UI
+    
+            // Cập nhật danh sách câu trả lời với thông tin tài khoản đầy đủ
             setSurveyQuestions((prevQuestions) =>
                 prevQuestions.map((q) => {
                     if (q.id === questionId) {
@@ -484,6 +479,7 @@ function RenderPost({ item, onDelete }) {
                                     id: newAnswer.id,
                                     answer_value: surveyResponses[questionId],
                                     survey_response: surveyResponse.id,
+                                    account: currentAccountUser.user, // Thêm thông tin tài khoản
                                 },
                             ],
                         };
@@ -491,15 +487,25 @@ function RenderPost({ item, onDelete }) {
                     return q;
                 })
             );
-
-            // Reset input sau khi gửi thành công
+    
+            // Cập nhật danh sách survey_responses của post_survey
+            item.post_survey.survey_responses = [
+                ...(item.post_survey.survey_responses || []),
+                {
+                    ...surveyResponse,
+                    account: currentAccountUser, // Thêm thông tin tài khoản ở đây luôn
+                },
+            ];
+    
             setSurveyResponses({ ...surveyResponses, [questionId]: "" });
-
+            setRefresh((prev) => !prev); // Trigger re-render
+    
         } catch (error) {
-            console.log(" Lỗi khi gửi câu trả lời:", error);
+            console.log("Lỗi khi gửi câu trả lời:", error);
             Alert.alert("Lỗi", "Không thể gửi câu trả lời. Vui lòng thử lại.");
         }
     };
+    
 
 
 
@@ -590,60 +596,55 @@ function RenderPost({ item, onDelete }) {
 
                     {item.post_survey && (<Text style={styles.surveyTime}>Thời gian kết thúc khảo sát: {new Date(item.post_survey.end_time).toLocaleString()}</Text>)}
                     {item.post_survey && (
-                        <View>
-                            <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
-                            {sortedSurveyQuestions.map((question) => (
-                                <View key={question.id} style={styles.questionContainer}>
-                                    {/* Hiển thị câu hỏi */}
-                                    <Text style={styles.surveyQuestion}>
-                                        {question.question_order}. {question.question_content}
-                                    </Text>
-                                    {/* {Nhập câu trả lời} */}
-                                    <TextInput style={styles.answerInput}
-                                        placeholder='Nhập câu trả lời..'
-                                        value={surveyResponses[question.id] || ""}
-                                        onChangeText={(text) => setSurveyResponses({ ...surveyResponses, [question.id]: text })}></TextInput>
-                                    {/* Nút gửi câu trả lời */}
-                                    <TouchableOpacity
-                                        style={styles.submitAnswerButton}
-                                        onPress={() => handleSubmitAnswer(question.id)}
-                                    >
-                                        <Text style={styles.submitAnswerText}>Gửi</Text>
-                                    </TouchableOpacity>
-                                    {/* Hiển thị danh sách câu trả lời */}
+                    <View key={refresh}>
+                        <Text style={styles.surveyTitle}>{item.post_survey.post_survey_title}</Text>
+                        {sortedSurveyQuestions.map((question) => (
+                            <View key={question.id} style={styles.questionContainer}>
+                                <Text style={styles.surveyQuestion}>
+                                    {question.question_order}. {question.question_content}
+                                </Text>
+                                <TextInput
+                                    style={styles.answerInput}
+                                    placeholder='Nhập câu trả lời..'
+                                    value={surveyResponses[question.id] || ""}
+                                    onChangeText={(text) => setSurveyResponses({ ...surveyResponses, [question.id]: text })}
+                                />
+                                <TouchableOpacity
+                                    style={styles.submitAnswerButton}
+                                    onPress={() => handleSubmitAnswer(question.id)}
+                                >
+                                    <Text style={styles.submitAnswerText}>Gửi</Text>
+                                </TouchableOpacity>
 
-                                    {surveyQuestions.find(q => q.id === question.id)?.survey_answers?.length > 0 ? (
-                                        surveyQuestions.find(q => q.id === question.id)?.survey_answers.map((answer) => {
-                                            const respondent = item.post_survey.survey_responses.find(
-                                                (response) => response.id === answer.survey_response
-                                            );
+                                {surveyQuestions.find(q => q.id === question.id)?.survey_answers?.length > 0 ? (
+                                    surveyQuestions.find(q => q.id === question.id)?.survey_answers.map((answer) => {
+                                        const respondent = item.post_survey.survey_responses.find(
+                                            (response) => response.id === answer.survey_response
+                                        );
 
-                                            return respondent ? (
-                                                <View key={answer.id} style={styles.answerWrapper}>
-                                                    <View style={styles.userContainer}>
-                                                        <Image
-                                                            source={{ uri: processImageURL(respondent.account.avatar) }}
-                                                            style={styles.userAvatar}
-                                                        />
-                                                        <Text style={styles.userName}>{respondent.account.full_name}</Text>
-                                                    </View>
-                                                    <View style={styles.answerBox}>
-                                                        <Text style={styles.answerText}>{answer.answer_value}</Text>
-                                                    </View>
+                                        return respondent ? (
+                                            <View key={answer.id} style={styles.answerWrapper}>
+                                                <View style={styles.userContainer}>
+                                                    <Image
+                                                        source={{ uri: processImageURL(respondent.account.avatar) }}
+                                                        style={styles.userAvatar}
+                                                    />
+                                                    <Text style={styles.userName}>{respondent.account.full_name}</Text>
                                                 </View>
-                                            ) : null;
-                                        })
-                                    ) : (
-                                        <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
-                                    )}
+                                                <View style={styles.answerBox}>
+                                                    <Text style={styles.answerText}>{answer.answer_value}</Text>
+                                                </View>
+                                            </View>
+                                        ) : null;
+                                    })
+                                ) : (
+                                    <Text style={styles.noAnswerText}>Chưa có câu trả lời</Text>
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                )}
 
-
-
-                                </View>
-                            ))}
-
-                        </View>
-                    )}
                 </View>
             )}
 
