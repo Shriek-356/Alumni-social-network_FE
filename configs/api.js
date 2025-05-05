@@ -2,6 +2,8 @@ import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const baseURL = 'https://socialapp130124.pythonanywhere.com/'
 
+const AI_URL ='https://openrouter.ai/api/v1/chat/completions' ;
+
 const axiosInstance = axios.create({
     baseURL:baseURL,
     timeout:5000
@@ -16,6 +18,16 @@ export const axiosDAuthApiInstance = (token) =>{
         }
     })
 }
+
+
+export const axiosInstanceAI = axios.create({
+    baseURL:AI_URL,
+    timeout:50000,
+    headers:{
+        "Authorization":"Bearer " + "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",
+        "Content-Type": "application/json",
+    }
+})
 
 export default axiosInstance
 

@@ -135,7 +135,7 @@ const ChatScreen = () => {
                     };
                     setMess((prevMess) => [...prevMess, newMessage]);
                     setNewMess("");
-                    fetchMess()
+                   
                    
                 }
             } catch (error) {
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     messageText: {
-        fontSize: 16,
+        fontSize: 19,
         color: "#333",
     },
     timestamp: {
