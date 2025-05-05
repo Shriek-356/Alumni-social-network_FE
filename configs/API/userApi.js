@@ -19,7 +19,8 @@ const endpoints = {
     'updateUser' : (id) => `/users/${id}/`,
     'changePassword' : "/users/change-password/",
     'getAccounts' : '/accounts/',
-    'updateLastLogin':'/users/update_last_login/'
+    'updateLastLogin':'/users/update_last_login/',
+    'getPaymentLink':'/vnpay-payment/',
 }
 
 export const updateLastLogin = async (token) => {
@@ -220,6 +221,16 @@ export const getAccountss= async(token)=>{
     }
 }
 
+
+export const getPaymentLink = async(token)=>{
+    try{
+        let response = await axiosDAuthApiInstance(token).get(endpoints.getPaymentLink)
+        return response.data
+    }catch(ex){
+        console.log(ex)
+        throw(ex)
+    }
+}
 
 
 

@@ -78,6 +78,14 @@ const Account = ({ navigation }) => {
                 <Text style={styles.buttonText}>Thông tin Cá Nhân</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('PaymentPreviewScreen')}>
+                <Text style={styles.buttonText}>Thanh Toán Gói Premium</Text>
+            </TouchableOpacity>
+
+
+
             {currentAccountUser && currentAccountUser.role === 'Admin' ? (
                 <>
                     <TouchableOpacity
@@ -100,6 +108,7 @@ const Account = ({ navigation }) => {
                         onPress={() => navigation.navigate('StatisticsScreen')}>
                         <Text style={styles.buttonText}>Xem thống kê người dùng và bài viết</Text>
                     </TouchableOpacity>
+                    
                 </>
             ) : (<View></View>)}
 

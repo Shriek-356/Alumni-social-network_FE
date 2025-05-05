@@ -21,6 +21,9 @@ import UnlockAccountScreen from './Components/Home/UnlockAccountScreen';
 import StatsPostSurvey from './Components/Post/StatsPostSurvey';
 import UserInfoScreen from './Components/User/UserInfoScreen';
 import StatisticsScreen from './Components/Home/StatisticsScreen';
+import VNPayPaymentScreen from './Components/Home/VNPayPaymentScreen';
+import PaymentPreviewScreen from './Components/Home/PaymentPreviewScreen';
+import GlowAvatar from './Components/Home/GlowAvatar';
 
 const Stack = createStackNavigator();
 
@@ -125,6 +128,13 @@ export default function App() {
                     />
                     <Stack.Screen name ="StatsPostSurvey" component={StatsPostSurvey}
                     options ={{headerShown:false}}/>
+                    <Stack.Screen name ="VNPayPaymentScreen" component={VNPayPaymentScreen}
+                    options ={{headerShown:false}}/>
+                    <Stack.Screen name ="PaymentPreviewScreen" component={PaymentPreviewScreen}
+                    options ={{headerShown:false}}/>
+                    <Stack.Screen name ="GlowAvatar" component={GlowAvatar}
+                    options ={{headerShown:false}}/>
+
                   </Stack.Navigator>
                 </NavigationContainer>
               </RegisterInfoContext.Provider>

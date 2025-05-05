@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { getToken } from '../../configs/api';
 import { CurrentAccountUserContext } from '../../App';
@@ -17,7 +17,7 @@ import axios from 'axios';
 import { updateAccountt } from '../../configs/API/userApi';
 import * as ImagePicker from 'expo-image-picker'
 import { getAccountUser } from '../../configs/API/userApi';
-
+import GlowAvatar from './GlowAvatar';
 
 const Profile = ({ route }) => {
 
@@ -72,7 +72,7 @@ const Profile = ({ route }) => {
         }
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaType: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true, 
+            allowsEditing: true,
             quality: 1,
         });
 
@@ -192,7 +192,7 @@ const Profile = ({ route }) => {
             }
         }
         fetchReactionsAccount()
-        
+
     }, [token, posts])
 
     function processImageURL(url) {
@@ -238,8 +238,11 @@ const Profile = ({ route }) => {
                 {thisAccount && thisAccount.avatar ? (
 
                     <TouchableOpacity onPress={() => { setSelectedImage(processImageURL(thisAccount.avatar)), setImageType('avatar') }}>
-                        <Image source={{ uri: avatarImage }}
-                            style={styles.avatar} />
+                        {thisAccount.subscription_status === 'Active' ? (
+                            <GlowAvatar uri={avatarImage} />
+                        ) : (
+                            <Image source={{ uri: avatarImage }} style={styles.avatar} />
+                        )}
                     </TouchableOpacity>
 
                 ) : (
@@ -367,7 +370,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',  
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     overlay: {
         position: 'absolute',
@@ -382,7 +385,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         width: '80%',
-        maxWidth: 400, 
+        maxWidth: 400,
     },
     zoomedImage: {
         width: 300,
@@ -426,5 +429,50 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    avatarWrapper: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: -50,
+    },
+
+    glow: {
+        position: 'absolute',
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        zIndex: 0,
+    },
+
+    gradientCircle: {
+        flex: 1,
+        borderRadius: 60,
+    },
+
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: -50,
+    },
+    glowCircle: {
+        position: 'absolute',
+        width: 130,
+        height: 130,
+        borderRadius: 65,
+        borderWidth: 5,
+        opacity: 0.6,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 12,
+        zIndex: 0,
+    },
+    avatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 4,
+        borderColor: '#fff',
+        zIndex: 1,
     },
 });
