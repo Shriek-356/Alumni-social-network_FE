@@ -125,7 +125,7 @@ function Login({ navigation: any }) {
                         }
                         else {
                             const id = await getCurrentUserInfo(response.access_token); // Lấy ID user
-                            await createMultipleRoom(response.access_token, id);
+                            await createMultipleRoom(response.access_token, id);//
                             navigation.navigate('AllView')
                         }
                     } else {
