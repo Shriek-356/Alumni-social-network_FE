@@ -24,7 +24,7 @@ export const axiosInstanceAI = axios.create({
     baseURL:AI_URL,
     timeout:50000,
     headers:{
-        "Authorization":"Bearer " + "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",
+        "Authorization":"Bearer " + "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",
         "Content-Type": "application/json",
     }
 })

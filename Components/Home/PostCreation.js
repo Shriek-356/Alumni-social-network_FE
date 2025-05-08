@@ -44,17 +44,18 @@ const CreatePost = () => {
         try {
             // Check trial and subscription status
             console.log('User Info:', {
-                trialCount: currentAccountUser?.ai_trial_user,
+                trialCount: currentAccountUser?.ai_trial_uses,
                 subscriptionStatus: currentAccountUser?.subscription_status,
                 expiryDate: currentAccountUser?.subscription_expiry_date,
             });
 
-            if (currentAccountUser?.ai_trial_user >= 3) {
+            if (currentAccountUser?.ai_trial_uses >= 2) {
                 if (currentAccountUser?.subscription_status !== 'Active') {
                     Alert.alert(
-                        "Subscription Required",
-                        "You have used all free AI trials. Please subscribe to continue using this feature.",
+                        "Thông báo hạn chế",
+                        "Bạn đã sử dụng hết 2 lần thử nghiệm AI miễn phí. Vui lòng đăng ký để tiếp tục sử dụng tính năng này.",
                         [{ text: "OK" }]
+
                     );
                     return;
                 }
@@ -62,8 +63,8 @@ const CreatePost = () => {
                 const expiryDate = new Date(currentAccountUser.subscription_expiry_date);
                 if (expiryDate < new Date()) {
                     Alert.alert(
-                        "Subscription Expired",
-                        "Your subscription has expired. Please renew to continue using AI features.",
+                        "Thông báo hạn chế",
+                        "Gói Premium của bạn đã hết hạn vui lòng gia hạn để tiếp tục sử dụng.",
                         [{ text: "OK" }]
                     );
                     return;
@@ -86,7 +87,7 @@ const CreatePost = () => {
                 setContent(aiContent);
                 setCurrentAccountUser(prev => ({
                     ...prev,
-                    ai_trial_user: (prev.ai_trial_user || 0) + 1,
+                    ai_trial_uses: (prev.ai_trial_uses || 0) + 1,
                 }));
             } else {
                 Alert.alert("Error", "No content received from AI.");
